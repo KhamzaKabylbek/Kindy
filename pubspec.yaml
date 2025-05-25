@@ -1,0 +1,52 @@
+name: super_app_kindergarten
+description: "A super app for kindergarten management."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  go_router: ^14.0.1
+  cupertino_icons: ^1.0.8
+  http: ^1.2.0
+  flutter_svg: ^2.0.9
+  cached_network_image: ^3.3.1
+  shared_preferences: ^2.2.2
+  intl: ^0.19.0
+  provider: ^6.1.2
+  
+  # Адаптивность и отзывчивый дизайн
+  flutter_screenutil: ^5.9.0   # Адаптивные размеры
+  device_preview: ^1.1.0       # Предпросмотр на разных устройствах
+  responsive_framework: ^1.1.1 # Отзывчивый фреймворк
+  flutter_adaptive_scaffold: ^0.1.8  # Адаптивные макеты
+  adaptive_theme: ^3.3.0       # Адаптивные темы
+  
+  # Локализация
+  flutter_localizations:
+    sdk: flutter
+    
+  # UI компоненты
+  flutter_staggered_grid_view: ^0.7.0  # Адаптивная сетка
+  animations: ^2.0.8                   # Анимации для адаптивного UI
+  
+  # Утилиты
+  flutter_platform_widgets: ^6.1.0     # Платформо-зависимые виджеты
+  visibility_detector: ^0.4.0+2        # Определение видимости виджетов
+  auto_size_text: ^3.0.0               # Автоматическое изменение размера текста
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  device_frame: ^1.1.0        # Фреймы для разных устройств
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+
