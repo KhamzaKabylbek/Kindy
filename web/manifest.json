@@ -1,6 +1,6 @@
 {
-    "name": "super_app_kindergarten",
-    "short_name": "super_app_kindergarten",
+    "name": "Kindy",
+    "short_name": "Kindy",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

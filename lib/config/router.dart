@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:super_app_kindergarten/features/auth/presentation/pages/forgot_password_page.dart';
-import 'package:super_app_kindergarten/features/auth/presentation/pages/login_page.dart';
-import 'package:super_app_kindergarten/features/auth/presentation/pages/queue_page.dart';
-import 'package:super_app_kindergarten/features/auth/presentation/pages/register_page.dart';
-import 'package:super_app_kindergarten/features/auth/presentation/pages/role_selection_page.dart';
-import 'package:super_app_kindergarten/features/auth/presentation/pages/parent_register_page.dart';
-import 'package:super_app_kindergarten/features/auth/presentation/pages/teacher_register_step1_page.dart';
-import 'package:super_app_kindergarten/features/auth/presentation/pages/teacher_register_step2_page.dart';
-import 'package:super_app_kindergarten/features/auth/presentation/pages/manager_register_step1_page.dart';
-import 'package:super_app_kindergarten/features/auth/presentation/pages/manager_register_step2_page.dart';
-import 'package:super_app_kindergarten/features/auth/presentation/pages/manager_register_step3_page.dart';
-import 'package:super_app_kindergarten/features/dashboard/presentation/pages/child_profile_page.dart';
-import 'package:super_app_kindergarten/features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:kindy/features/auth/presentation/pages/forgot_password_page.dart';
+import 'package:kindy/features/auth/presentation/pages/login_page.dart';
+import 'package:kindy/features/auth/presentation/pages/queue_page.dart';
+import 'package:kindy/features/auth/presentation/pages/queue_status_page.dart';
+import 'package:kindy/features/auth/presentation/pages/register_page.dart';
+import 'package:kindy/features/auth/presentation/pages/role_selection_page.dart';
+import 'package:kindy/features/auth/presentation/pages/parent_register_page.dart';
+import 'package:kindy/features/auth/presentation/pages/teacher_register_step1_page.dart';
+import 'package:kindy/features/auth/presentation/pages/teacher_register_step2_page.dart';
+import 'package:kindy/features/auth/presentation/pages/manager_register_step1_page.dart';
+import 'package:kindy/features/auth/presentation/pages/manager_register_step2_page.dart';
+import 'package:kindy/features/auth/presentation/pages/manager_register_step3_page.dart';
+import 'package:kindy/features/dashboard/presentation/pages/child_profile_page.dart';
+import 'package:kindy/features/dashboard/presentation/pages/dashboard_page.dart';
 
 // Импортируй другие страницы по мере их создания
 
@@ -72,6 +73,10 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const ForgotPasswordPage(),
     ),
     GoRoute(path: '/queue', builder: (context, state) => const QueuePage()),
+    GoRoute(
+      path: '/queue-status',
+      builder: (context, state) => const QueueStatusPage(),
+    ),
     GoRoute(
       path: '/dashboard',
       builder: (context, state) => const DashboardPage(),

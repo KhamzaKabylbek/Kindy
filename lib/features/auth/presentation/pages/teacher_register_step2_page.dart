@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:super_app_kindergarten/core/constants/app_colors.dart';
-import 'package:super_app_kindergarten/core/utils/screen_util.dart';
-import 'package:super_app_kindergarten/shared/widgets/adaptive_widgets.dart';
+import 'package:kindy/core/constants/app_colors.dart';
+import 'package:kindy/core/utils/screen_util.dart';
+import 'package:kindy/shared/widgets/adaptive_widgets.dart';
 
 class TeacherRegisterStep2Page extends StatefulWidget {
   final Map<String, dynamic>? previousData;

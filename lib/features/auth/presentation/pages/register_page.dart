@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:super_app_kindergarten/core/constants/app_colors.dart';
-import 'package:super_app_kindergarten/core/constants/app_dimensions.dart';
-import 'package:super_app_kindergarten/core/constants/app_text_styles.dart';
-import 'package:super_app_kindergarten/core/utils/screen_util.dart';
-import 'package:super_app_kindergarten/shared/widgets/adaptive_form.dart'
-    as form;
-import 'package:super_app_kindergarten/shared/widgets/adaptive_widgets.dart';
+import 'package:kindy/core/constants/app_colors.dart';
+import 'package:kindy/core/constants/app_dimensions.dart';
+import 'package:kindy/core/constants/app_text_styles.dart';
+import 'package:kindy/core/utils/screen_util.dart';
+import 'package:kindy/shared/widgets/adaptive_form.dart' as form;
+import 'package:kindy/shared/widgets/adaptive_widgets.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -508,11 +507,12 @@ class _RegisterPageState extends State<RegisterPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 AdaptiveText(
-                                  'BalaBaqsha',
+                                  'Kindy.kz',
                                   style: TextStyle(
                                     fontSize: 32,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
+                                    fontFamily: 'Comic Sans MS',
                                   ),
                                 ),
                                 AdaptiveText(

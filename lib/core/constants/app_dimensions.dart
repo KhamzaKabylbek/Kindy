@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:super_app_kindergarten/core/utils/screen_util.dart';
+import 'package:kindy/core/utils/screen_util.dart';
 
 class AppDimensions {
   // Padding and margin values

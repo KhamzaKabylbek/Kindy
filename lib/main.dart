@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:super_app_kindergarten/config/router.dart';
-import 'package:super_app_kindergarten/core/theme/app_theme.dart';
-import 'package:super_app_kindergarten/core/utils/screen_util.dart';
+import 'package:kindy/config/router.dart';
+import 'package:kindy/core/theme/app_theme.dart';
+import 'package:kindy/core/utils/screen_util.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       routerConfig: router,
       debugShowCheckedModeBanner: false,
-      title: 'BalaBaqsha',
+      title: 'Kindy',
       theme: AppTheme.lightTheme,
       builder: (context, child) {
         // Инициализируем ScreenUtil при запуске приложения

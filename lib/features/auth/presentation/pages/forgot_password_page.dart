@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:super_app_kindergarten/core/constants/app_colors.dart';
-import 'package:super_app_kindergarten/core/constants/app_dimensions.dart';
-import 'package:super_app_kindergarten/core/constants/app_text_styles.dart';
-import 'package:super_app_kindergarten/core/utils/screen_util.dart';
-import 'package:super_app_kindergarten/shared/widgets/adaptive_form.dart'
-    as form;
-import 'package:super_app_kindergarten/shared/widgets/adaptive_widgets.dart';
+import 'package:kindy/core/constants/app_colors.dart';
+import 'package:kindy/core/constants/app_dimensions.dart';
+import 'package:kindy/core/constants/app_text_styles.dart';
+import 'package:kindy/core/utils/screen_util.dart';
+import 'package:kindy/shared/widgets/adaptive_form.dart' as form;
+import 'package:kindy/shared/widgets/adaptive_widgets.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -49,12 +48,19 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       _isLoading = true;
     });
 
-    // Simulate sending verification code
     Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-        _currentStep = 1; // Proceed to verification code step
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _currentStep = 1;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Код подтверждения отправлен на вашу почту'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
     });
   }
 
@@ -73,12 +79,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       _isLoading = true;
     });
 
-    // Simulate verifying code
     Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-        _currentStep = 2; // Proceed to new password step
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _currentStep = 2;
+        });
+      }
     });
   }
 
@@ -98,7 +105,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Пароли не совпадают'),
-          backgroundColor: AppColors.error,
+          backgroundColor: AppColors.warning,
         ),
       );
       return;
@@ -108,270 +115,320 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       _isLoading = true;
     });
 
-    // Simulate password reset
     Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
 
-      // Show success dialog
-      showDialog(
-        context: context,
-        builder:
-            (BuildContext context) => AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radius16),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.check_circle,
-                    color: AppColors.success,
-                    size: 64,
-                  ),
-                  const SizedBox(height: AppDimensions.spacingMedium),
-                  AdaptiveText(
-                    'Пароль успешно изменен!',
-                    style: AppTextStyles.h3,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppDimensions.spacingSmall),
-                  AdaptiveText(
-                    'Теперь вы можете войти, используя новый пароль',
-                    style: AppTextStyles.body2,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppDimensions.spacingLarge),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        context.go('/login');
-                      },
-                      child: const Text('Вернуться к входу'),
+        showDialog(
+          context: context,
+          builder:
+              (BuildContext context) => AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_circle,
+                      color: AppColors.success,
+                      size: 64,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Пароль успешно изменен!',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Теперь вы можете войти, используя новый пароль',
+                      style: TextStyle(fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          context.go('/login');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.figmaGreen,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                        ),
+                        child: const Text('Вернуться к входу'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-      );
+        );
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Инициализируем ScreenUtil для получения правильных размеров экрана
     ScreenUtil.init(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Восстановление пароля'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/login'),
-        ),
-      ),
+      resizeToAvoidBottomInset: false,
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: AppColors.mainGradient,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: AppColors.figmaPastelGradient,
+            stops: [0.0, 0.3, 0.7, 1.0],
           ),
         ),
         child: SafeArea(
-          child: AdaptiveLayout(
-            // Мобильный вид - вертикальное расположение
-            mobile: Center(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppDimensions.getAdaptivePadding(
-                      AppDimensions.padding24,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      SizedBox(height: AppDimensions.getAdaptivePadding(20)),
-                      _buildProgressIndicator(),
-                      SizedBox(height: AppDimensions.getAdaptivePadding(30)),
-                      _buildStepContent(),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Планшетный и десктопный вид - карточка по центру
-            tablet: Center(
-              child: Container(
-                width: 600,
-                height: 550,
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                child: Card(
-                  elevation: 10,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      AppDimensions.getAdaptiveRadius(AppDimensions.radius16),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(
-                      AppDimensions.getAdaptivePadding(AppDimensions.padding24),
-                    ),
-                    child: Column(
-                      children: [
-                        _buildProgressIndicator(),
-                        SizedBox(height: AppDimensions.getAdaptivePadding(40)),
-                        Expanded(child: _buildStepContent()),
+          child: Stack(
+            children: [
+              // Кнопка "Назад"
+              Positioned(
+                top: 20,
+                left: 20,
+                child: GestureDetector(
+                  onTap: () => context.go('/login'),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.shadowColor,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
                       ],
                     ),
+                    child: Center(
+                      child: Icon(
+                        Icons.arrow_back,
+                        color: AppColors.figmaGreen,
+                        size: 24,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+
+              // Основной контент
+              AdaptiveLayout(
+                mobile: Center(
+                  child: Container(
+                    width: ScreenUtil.adaptiveValue(
+                      mobile: 340.0,
+                      tablet: 400.0,
+                      desktop: 450.0,
+                    ),
+                    height: ScreenUtil.adaptiveValue(
+                      mobile: _getContainerHeight(),
+                      tablet: _getContainerHeight() + 50,
+                      desktop: _getContainerHeight() + 100,
+                    ),
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ScreenUtil.adaptiveValue(
+                          mobile: 28.0,
+                          tablet: 32.0,
+                          desktop: 36.0,
+                        ),
+                        vertical: ScreenUtil.adaptiveValue(
+                          mobile: 25.0,
+                          tablet: 30.0,
+                          desktop: 35.0,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Заголовок
+                          Text(
+                            _getStepTitle(),
+                            style: TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: ScreenUtil.adaptiveValue(
+                                mobile: 22.0,
+                                tablet: 26.0,
+                                desktop: 30.0,
+                              ),
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.figmaGreen,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+
+                          SizedBox(
+                            height: ScreenUtil.adaptiveValue(
+                              mobile: 24.0,
+                              tablet: 28.0,
+                              desktop: 32.0,
+                            ),
+                          ),
+
+                          // Индикатор прогресса
+                          _buildProgressIndicator(),
+
+                          SizedBox(
+                            height: ScreenUtil.adaptiveValue(
+                              mobile: 24.0,
+                              tablet: 28.0,
+                              desktop: 32.0,
+                            ),
+                          ),
+
+                          // Контент в зависимости от шага
+                          _buildStepContent(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                tablet: Center(
+                  child: Container(
+                    width: 500,
+                    height: _getContainerHeight() + 100,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(40),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            _getStepTitle(),
+                            style: TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.figmaGreen,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+
+                          const SizedBox(height: 30),
+                          _buildProgressIndicator(),
+                          const SizedBox(height: 30),
+                          _buildStepContent(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildProgressIndicator() {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(child: _buildStepIndicator(0, 'Email', _currentStep >= 0)),
-            _buildSeparator(_currentStep >= 1),
-            Expanded(
-              child: _buildStepIndicator(
-                1,
-                'Код подтверждения',
-                _currentStep >= 1,
-              ),
-            ),
-            _buildSeparator(_currentStep >= 2),
-            Expanded(
-              child: _buildStepIndicator(2, 'Новый пароль', _currentStep >= 2),
-            ),
-          ],
-        ),
-        SizedBox(height: AppDimensions.getAdaptivePadding(20)),
-        AdaptiveText(
-          _getStepTitle(),
-          style: TextStyle(
-            fontSize: ScreenUtil.adaptiveValue(
-              mobile: 24.0,
-              tablet: 28.0,
-              desktop: 32.0,
-            ),
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        SizedBox(height: AppDimensions.getAdaptivePadding(8)),
-        AdaptiveText(
-          _getStepDescription(),
-          style: TextStyle(
-            fontSize: ScreenUtil.adaptiveValue(
-              mobile: 16.0,
-              tablet: 17.0,
-              desktop: 18.0,
-            ),
-            color: Colors.white,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStepIndicator(int step, String label, bool isActive) {
-    final double indicatorSize = ScreenUtil.adaptiveValue(
-      mobile: 30.0,
-      tablet: 36.0,
-      desktop: 40.0,
-    );
-
-    return Column(
-      children: [
-        Container(
-          width: indicatorSize,
-          height: indicatorSize,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isActive ? AppColors.accent : Colors.white.withOpacity(0.3),
-          ),
-          child: Center(
-            child: Text(
-              '${step + 1}',
-              style: TextStyle(
-                color: isActive ? Colors.white : Colors.grey.shade600,
-                fontWeight: FontWeight.bold,
-                fontSize: ScreenUtil.adaptiveValue(
-                  mobile: 14.0,
-                  tablet: 16.0,
-                  desktop: 18.0,
-                ),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(height: AppDimensions.getAdaptivePadding(8)),
-        AdaptiveText(
-          label,
-          style: TextStyle(
-            fontSize: ScreenUtil.adaptiveValue(
-              mobile: 12.0,
-              tablet: 14.0,
-              desktop: 16.0,
-            ),
-            color: isActive ? Colors.white : Colors.white.withOpacity(0.6),
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSeparator(bool isActive) {
-    return Container(
-      width: 40,
-      height: 2,
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      color: isActive ? AppColors.accent : Colors.white.withOpacity(0.3),
-    );
+  double _getContainerHeight() {
+    switch (_currentStep) {
+      case 0:
+        return 350.0;
+      case 1:
+        return 380.0;
+      case 2:
+        return 450.0;
+      default:
+        return 350.0;
+    }
   }
 
   String _getStepTitle() {
     switch (_currentStep) {
       case 0:
-        return 'Введите ваш Email';
+        return 'ВОССТАНОВЛЕНИЕ ПАРОЛЯ';
       case 1:
-        return 'Введите код подтверждения';
+        return 'ПОДТВЕРЖДЕНИЕ';
       case 2:
-        return 'Создайте новый пароль';
+        return 'НОВЫЙ ПАРОЛЬ';
       default:
-        return '';
+        return 'ВОССТАНОВЛЕНИЕ ПАРОЛЯ';
     }
   }
 
-  String _getStepDescription() {
-    switch (_currentStep) {
-      case 0:
-        return 'Мы отправим вам код подтверждения';
-      case 1:
-        return 'Код был отправлен на ${_emailController.text}';
-      case 2:
-        return 'Придумайте надежный пароль';
-      default:
-        return '';
-    }
+  Widget _buildProgressIndicator() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildProgressDot(0),
+        _buildProgressLine(0),
+        _buildProgressDot(1),
+        _buildProgressLine(1),
+        _buildProgressDot(2),
+      ],
+    );
+  }
+
+  Widget _buildProgressDot(int step) {
+    bool isActive = step <= _currentStep;
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isActive ? AppColors.figmaGreen : Colors.grey.shade300,
+      ),
+      child: Center(
+        child: Text(
+          '${step + 1}',
+          style: TextStyle(
+            color: isActive ? Colors.white : Colors.grey.shade600,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressLine(int step) {
+    bool isActive = step < _currentStep;
+    return Container(
+      width: 30,
+      height: 2,
+      color: isActive ? AppColors.figmaGreen : Colors.grey.shade300,
+    );
   }
 
   Widget _buildStepContent() {
@@ -379,527 +436,365 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       case 0:
         return _buildEmailStep();
       case 1:
-        return _buildVerificationStep();
+        return _buildCodeStep();
       case 2:
-        return _buildNewPasswordStep();
+        return _buildPasswordStep();
       default:
-        return Container();
+        return _buildEmailStep();
     }
   }
 
   Widget _buildEmailStep() {
-    return form.AdaptiveFormContainer(
+    return Column(
       children: [
-        Container(
-          height: ScreenUtil.adaptiveValue(
-            mobile: 56.0,
-            tablet: 60.0,
-            desktop: 64.0,
-          ),
-          child: TextField(
-            controller: _emailController,
-            style: TextStyle(
-              fontSize: ScreenUtil.adaptiveValue(
-                mobile: 16.0,
-                tablet: 17.0,
-                desktop: 18.0,
-              ),
+        Text(
+          'Введите ваш email для получения кода восстановления',
+          style: TextStyle(
+            fontSize: ScreenUtil.adaptiveValue(
+              mobile: 14.0,
+              tablet: 16.0,
+              desktop: 18.0,
             ),
-            decoration: InputDecoration(
-              hintText: 'Введите ваш Email',
-              hintStyle: TextStyle(
-                fontSize: ScreenUtil.adaptiveValue(
-                  mobile: 17.0,
-                  tablet: 18.0,
-                  desktop: 19.0,
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                vertical: AppDimensions.getAdaptivePadding(16),
-                horizontal: AppDimensions.getAdaptivePadding(16),
-              ),
-              prefixIcon: Icon(
-                Icons.email_outlined,
-                color: AppColors.primary,
-                size: AppDimensions.getAdaptiveIconSize(24),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-                ),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-                ),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-                ),
-                borderSide: BorderSide(color: AppColors.primary, width: 2),
-              ),
-            ),
-            keyboardType: TextInputType.emailAddress,
+            color: AppColors.figmaTextSecondary,
           ),
+          textAlign: TextAlign.center,
         ),
-        SizedBox(height: AppDimensions.getAdaptivePadding(40)),
         SizedBox(
-          width: double.infinity,
           height: ScreenUtil.adaptiveValue(
-            mobile: 50.0,
-            tablet: 54.0,
-            desktop: 58.0,
-          ),
-          child: ElevatedButton(
-            onPressed: _isLoading ? null : _handleRequestCode,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-                ),
-              ),
-              elevation: 2,
-              padding: EdgeInsets.symmetric(
-                vertical: AppDimensions.getAdaptivePadding(12),
-              ),
-            ),
-            child:
-                _isLoading
-                    ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        color: Colors.white70,
-                        strokeWidth: 2.0,
-                      ),
-                    )
-                    : AdaptiveText(
-                      'Отправить код',
-                      style: TextStyle(
-                        fontSize: ScreenUtil.adaptiveValue(
-                          mobile: 16.0,
-                          tablet: 18.0,
-                          desktop: 20.0,
-                        ),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+            mobile: 24.0,
+            tablet: 28.0,
+            desktop: 32.0,
           ),
         ),
-        SizedBox(height: AppDimensions.getAdaptivePadding(16)),
-        TextButton(
-          onPressed: () => context.go('/login'),
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppDimensions.getAdaptivePadding(16),
-              vertical: AppDimensions.getAdaptivePadding(8),
-            ),
+        _buildFigmaTextField(
+          controller: _emailController,
+          hintText: 'Введите почту',
+          keyboardType: TextInputType.emailAddress,
+        ),
+        SizedBox(
+          height: ScreenUtil.adaptiveValue(
+            mobile: 24.0,
+            tablet: 28.0,
+            desktop: 32.0,
           ),
-          child: AdaptiveText(
-            'Вернуться к входу',
-            style: TextStyle(
-              fontSize: ScreenUtil.adaptiveValue(
-                mobile: 14.0,
-                tablet: 15.0,
-                desktop: 16.0,
-              ),
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+        ),
+        _buildActionButton(
+          text: 'Отправить код',
+          onPressed: _isLoading ? null : _handleRequestCode,
         ),
       ],
     );
   }
 
-  Widget _buildVerificationStep() {
-    return form.AdaptiveFormContainer(
+  Widget _buildCodeStep() {
+    return Column(
       children: [
-        Container(
-          height: ScreenUtil.adaptiveValue(
-            mobile: 56.0,
-            tablet: 60.0,
-            desktop: 64.0,
-          ),
-          child: TextField(
-            controller: _codeController,
-            style: TextStyle(
-              fontSize: ScreenUtil.adaptiveValue(
-                mobile: 16.0,
-                tablet: 17.0,
-                desktop: 18.0,
-              ),
+        Text(
+          'Введите код подтверждения, отправленный на вашу почту',
+          style: TextStyle(
+            fontSize: ScreenUtil.adaptiveValue(
+              mobile: 14.0,
+              tablet: 16.0,
+              desktop: 18.0,
             ),
-            decoration: InputDecoration(
-              hintText: 'Введите код подтверждения',
-              hintStyle: TextStyle(
-                fontSize: ScreenUtil.adaptiveValue(
-                  mobile: 17.0,
-                  tablet: 18.0,
-                  desktop: 19.0,
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                vertical: AppDimensions.getAdaptivePadding(16),
-                horizontal: AppDimensions.getAdaptivePadding(16),
-              ),
-              prefixIcon: Icon(
-                Icons.lock_outline,
-                color: AppColors.primary,
-                size: AppDimensions.getAdaptiveIconSize(24),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-                ),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-                ),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-                ),
-                borderSide: BorderSide(color: AppColors.primary, width: 2),
-              ),
-            ),
-            keyboardType: TextInputType.number,
+            color: AppColors.figmaTextSecondary,
           ),
+          textAlign: TextAlign.center,
         ),
-        SizedBox(height: AppDimensions.getAdaptivePadding(40)),
         SizedBox(
-          width: double.infinity,
           height: ScreenUtil.adaptiveValue(
-            mobile: 50.0,
-            tablet: 54.0,
-            desktop: 58.0,
-          ),
-          child: ElevatedButton(
-            onPressed: _isLoading ? null : _handleVerifyCode,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-                ),
-              ),
-              elevation: 2,
-              padding: EdgeInsets.symmetric(
-                vertical: AppDimensions.getAdaptivePadding(12),
-              ),
-            ),
-            child:
-                _isLoading
-                    ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        color: Colors.white70,
-                        strokeWidth: 2.0,
-                      ),
-                    )
-                    : AdaptiveText(
-                      'Подтвердить',
-                      style: TextStyle(
-                        fontSize: ScreenUtil.adaptiveValue(
-                          mobile: 16.0,
-                          tablet: 18.0,
-                          desktop: 20.0,
-                        ),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+            mobile: 24.0,
+            tablet: 28.0,
+            desktop: 32.0,
           ),
         ),
-        SizedBox(height: AppDimensions.getAdaptivePadding(16)),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _currentStep = 0; // Go back to email step
-                });
-              },
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.symmetric(
-                  horizontal: AppDimensions.getAdaptivePadding(16),
-                  vertical: AppDimensions.getAdaptivePadding(8),
-                ),
-              ),
-              child: AdaptiveText(
-                'Назад',
-                style: TextStyle(
-                  fontSize: ScreenUtil.adaptiveValue(
-                    mobile: 14.0,
-                    tablet: 15.0,
-                    desktop: 16.0,
-                  ),
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                // Resend verification code
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Код подтверждения отправлен повторно'),
-                    backgroundColor: AppColors.info,
-                  ),
-                );
-              },
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.symmetric(
-                  horizontal: AppDimensions.getAdaptivePadding(16),
-                  vertical: AppDimensions.getAdaptivePadding(8),
-                ),
-              ),
-              child: AdaptiveText(
-                'Отправить код повторно',
-                style: TextStyle(
-                  fontSize: ScreenUtil.adaptiveValue(
-                    mobile: 14.0,
-                    tablet: 15.0,
-                    desktop: 16.0,
-                  ),
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
+        _buildFigmaTextField(
+          controller: _codeController,
+          hintText: 'Введите код',
+          keyboardType: TextInputType.number,
         ),
-      ],
-    );
-  }
-
-  Widget _buildNewPasswordStep() {
-    final double iconSize = AppDimensions.getAdaptiveIconSize(24);
-
-    return form.AdaptiveFormContainer(
-      children: [
-        Container(
-          height: ScreenUtil.adaptiveValue(
-            mobile: 56.0,
-            tablet: 60.0,
-            desktop: 64.0,
-          ),
-          child: TextField(
-            controller: _newPasswordController,
-            obscureText: _obscurePassword,
-            style: TextStyle(
-              fontSize: ScreenUtil.adaptiveValue(
-                mobile: 16.0,
-                tablet: 17.0,
-                desktop: 18.0,
-              ),
-            ),
-            decoration: InputDecoration(
-              hintText: 'Новый пароль',
-              hintStyle: TextStyle(
-                fontSize: ScreenUtil.adaptiveValue(
-                  mobile: 17.0,
-                  tablet: 18.0,
-                  desktop: 19.0,
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                vertical: AppDimensions.getAdaptivePadding(16),
-                horizontal: AppDimensions.getAdaptivePadding(16),
-              ),
-              prefixIcon: Icon(
-                Icons.lock_outline,
-                color: AppColors.primary,
-                size: iconSize,
-              ),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                  color: Colors.grey.shade400,
-                  size: iconSize,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _obscurePassword = !_obscurePassword;
-                  });
-                },
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-                ),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-                ),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-                ),
-                borderSide: BorderSide(color: AppColors.primary, width: 2),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(height: AppDimensions.getAdaptivePadding(16)),
-        Container(
-          height: ScreenUtil.adaptiveValue(
-            mobile: 56.0,
-            tablet: 60.0,
-            desktop: 64.0,
-          ),
-          child: TextField(
-            controller: _confirmPasswordController,
-            obscureText: _obscureConfirmPassword,
-            style: TextStyle(
-              fontSize: ScreenUtil.adaptiveValue(
-                mobile: 16.0,
-                tablet: 17.0,
-                desktop: 18.0,
-              ),
-            ),
-            decoration: InputDecoration(
-              hintText: 'Подтвердите пароль',
-              hintStyle: TextStyle(
-                fontSize: ScreenUtil.adaptiveValue(
-                  mobile: 17.0,
-                  tablet: 18.0,
-                  desktop: 19.0,
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                vertical: AppDimensions.getAdaptivePadding(16),
-                horizontal: AppDimensions.getAdaptivePadding(16),
-              ),
-              prefixIcon: Icon(
-                Icons.lock_outline,
-                color: AppColors.primary,
-                size: iconSize,
-              ),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscureConfirmPassword
-                      ? Icons.visibility_off
-                      : Icons.visibility,
-                  color: Colors.grey.shade400,
-                  size: iconSize,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _obscureConfirmPassword = !_obscureConfirmPassword;
-                  });
-                },
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-                ),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-                ),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-                ),
-                borderSide: BorderSide(color: AppColors.primary, width: 2),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(height: AppDimensions.getAdaptivePadding(40)),
         SizedBox(
-          width: double.infinity,
           height: ScreenUtil.adaptiveValue(
-            mobile: 50.0,
-            tablet: 54.0,
-            desktop: 58.0,
-          ),
-          child: ElevatedButton(
-            onPressed: _isLoading ? null : _handleResetPassword,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-                ),
-              ),
-              elevation: 2,
-              padding: EdgeInsets.symmetric(
-                vertical: AppDimensions.getAdaptivePadding(12),
-              ),
-            ),
-            child:
-                _isLoading
-                    ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        color: Colors.white70,
-                        strokeWidth: 2.0,
-                      ),
-                    )
-                    : AdaptiveText(
-                      'Сохранить новый пароль',
-                      style: TextStyle(
-                        fontSize: ScreenUtil.adaptiveValue(
-                          mobile: 16.0,
-                          tablet: 18.0,
-                          desktop: 20.0,
-                        ),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+            mobile: 24.0,
+            tablet: 28.0,
+            desktop: 32.0,
           ),
         ),
-        SizedBox(height: AppDimensions.getAdaptivePadding(16)),
-        TextButton(
-          onPressed: () {
+        _buildActionButton(
+          text: 'Подтвердить',
+          onPressed: _isLoading ? null : _handleVerifyCode,
+        ),
+        SizedBox(
+          height: ScreenUtil.adaptiveValue(
+            mobile: 16.0,
+            tablet: 20.0,
+            desktop: 24.0,
+          ),
+        ),
+        GestureDetector(
+          onTap: () {
             setState(() {
-              _currentStep = 1; // Go back to verification step
+              _currentStep = 0;
             });
           },
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppDimensions.getAdaptivePadding(16),
-              vertical: AppDimensions.getAdaptivePadding(8),
-            ),
-          ),
-          child: AdaptiveText(
-            'Назад',
+          child: Text(
+            'Отправить код повторно',
             style: TextStyle(
               fontSize: ScreenUtil.adaptiveValue(
-                mobile: 14.0,
-                tablet: 15.0,
+                mobile: 12.0,
+                tablet: 14.0,
                 desktop: 16.0,
               ),
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
+              color: AppColors.figmaGreen,
+              fontStyle: FontStyle.italic,
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPasswordStep() {
+    return Column(
+      children: [
+        Text(
+          'Введите новый пароль',
+          style: TextStyle(
+            fontSize: ScreenUtil.adaptiveValue(
+              mobile: 14.0,
+              tablet: 16.0,
+              desktop: 18.0,
+            ),
+            color: AppColors.figmaTextSecondary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        SizedBox(
+          height: ScreenUtil.adaptiveValue(
+            mobile: 24.0,
+            tablet: 28.0,
+            desktop: 32.0,
+          ),
+        ),
+        _buildFigmaPasswordField(
+          controller: _newPasswordController,
+          hintText: 'Новый пароль',
+          obscureText: _obscurePassword,
+          onToggle: () {
+            setState(() {
+              _obscurePassword = !_obscurePassword;
+            });
+          },
+        ),
+        SizedBox(
+          height: ScreenUtil.adaptiveValue(
+            mobile: 12.0,
+            tablet: 16.0,
+            desktop: 20.0,
+          ),
+        ),
+        _buildFigmaPasswordField(
+          controller: _confirmPasswordController,
+          hintText: 'Повторите пароль',
+          obscureText: _obscureConfirmPassword,
+          onToggle: () {
+            setState(() {
+              _obscureConfirmPassword = !_obscureConfirmPassword;
+            });
+          },
+        ),
+        SizedBox(
+          height: ScreenUtil.adaptiveValue(
+            mobile: 24.0,
+            tablet: 28.0,
+            desktop: 32.0,
+          ),
+        ),
+        _buildActionButton(
+          text: 'Изменить пароль',
+          onPressed: _isLoading ? null : _handleResetPassword,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFigmaTextField({
+    required TextEditingController controller,
+    required String hintText,
+    TextInputType? keyboardType,
+  }) {
+    return Container(
+      width: ScreenUtil.adaptiveValue(
+        mobile: 250.0,
+        tablet: 320.0,
+        desktop: 360.0,
+      ),
+      height: ScreenUtil.adaptiveValue(
+        mobile: 38.0,
+        tablet: 44.0,
+        desktop: 50.0,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.figmaInputBackground,
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        style: TextStyle(
+          fontSize: ScreenUtil.adaptiveValue(
+            mobile: 14.0,
+            tablet: 16.0,
+            desktop: 18.0,
+          ),
+          color: AppColors.figmaTextSecondary,
+        ),
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: TextStyle(
+            fontSize: ScreenUtil.adaptiveValue(
+              mobile: 14.0,
+              tablet: 16.0,
+              desktop: 18.0,
+            ),
+            color: AppColors.figmaTextSecondary.withOpacity(0.7),
+          ),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: ScreenUtil.adaptiveValue(
+              mobile: 12.0,
+              tablet: 16.0,
+              desktop: 20.0,
+            ),
+            vertical: ScreenUtil.adaptiveValue(
+              mobile: 8.0,
+              tablet: 10.0,
+              desktop: 12.0,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFigmaPasswordField({
+    required TextEditingController controller,
+    required String hintText,
+    required bool obscureText,
+    required VoidCallback onToggle,
+  }) {
+    return Container(
+      width: ScreenUtil.adaptiveValue(
+        mobile: 250.0,
+        tablet: 320.0,
+        desktop: 360.0,
+      ),
+      height: ScreenUtil.adaptiveValue(
+        mobile: 38.0,
+        tablet: 44.0,
+        desktop: 50.0,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.figmaInputBackground,
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        style: TextStyle(
+          fontSize: ScreenUtil.adaptiveValue(
+            mobile: 14.0,
+            tablet: 16.0,
+            desktop: 18.0,
+          ),
+          color: AppColors.figmaTextSecondary,
+        ),
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: TextStyle(
+            fontSize: ScreenUtil.adaptiveValue(
+              mobile: 14.0,
+              tablet: 16.0,
+              desktop: 18.0,
+            ),
+            color: AppColors.figmaTextSecondary.withOpacity(0.7),
+          ),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: ScreenUtil.adaptiveValue(
+              mobile: 12.0,
+              tablet: 16.0,
+              desktop: 20.0,
+            ),
+            vertical: ScreenUtil.adaptiveValue(
+              mobile: 8.0,
+              tablet: 10.0,
+              desktop: 12.0,
+            ),
+          ),
+          suffixIcon: GestureDetector(
+            onTap: onToggle,
+            child: Icon(
+              obscureText ? Icons.visibility_off : Icons.visibility,
+              color: AppColors.figmaTextSecondary.withOpacity(0.5),
+              size: ScreenUtil.adaptiveValue(
+                mobile: 16.0,
+                tablet: 18.0,
+                desktop: 20.0,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required String text,
+    required VoidCallback? onPressed,
+  }) {
+    return SizedBox(
+      width: ScreenUtil.adaptiveValue(
+        mobile: 250.0,
+        tablet: 320.0,
+        desktop: 360.0,
+      ),
+      height: ScreenUtil.adaptiveValue(
+        mobile: 32.0,
+        tablet: 38.0,
+        desktop: 42.0,
+      ),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.figmaGreen,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+          elevation: 0,
+          padding: EdgeInsets.zero,
+        ),
+        child:
+            _isLoading
+                ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                : Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: ScreenUtil.adaptiveValue(
+                      mobile: 16.0,
+                      tablet: 18.0,
+                      desktop: 20.0,
+                    ),
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+      ),
     );
   }
 }

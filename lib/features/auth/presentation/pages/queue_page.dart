@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:super_app_kindergarten/core/constants/app_colors.dart';
-import 'package:super_app_kindergarten/core/constants/app_dimensions.dart';
-import 'package:super_app_kindergarten/core/constants/app_text_styles.dart';
+import 'package:kindy/core/constants/app_colors.dart';
+import 'package:kindy/core/constants/app_dimensions.dart';
+import 'package:kindy/core/constants/app_text_styles.dart';
+
+enum ApplicationStatus {
+  acceptedToCompetition('Принят на конкурс', AppColors.primary),
+  placeReserved('Место забронировано', Colors.green),
+  cancelled('Аннулировано', Colors.red),
+  successful('Успешно', Colors.blue);
+
+  const ApplicationStatus(this.displayName, this.color);
+  final String displayName;
+  final Color color;
+}
 
 class QueuePage extends StatefulWidget {
   const QueuePage({super.key});
@@ -13,14 +24,37 @@ class QueuePage extends StatefulWidget {
 
 class _QueuePageState extends State<QueuePage> {
   int _currentStep = 0;
+
+  // Контроллеры для полей
   final _childNameController = TextEditingController();
-  final _childBirthController = TextEditingController();
-  DateTime? _selectedDate;
+  final _childIinController = TextEditingController();
+  final _childBirthYearController = TextEditingController();
+
+  // Выбранные значения
+  String? _selectedCity;
+  String? _selectedKindergarten;
+  String? _selectedGroup;
+
+  // Данные для выпадающих списков
+  final Map<String, List<String>> _kindergartensByCity = {
+    'Алматы': ['Балдаурен №1', 'Солнышко №2', 'Радость №3', 'Ақбота №4'],
+    'Астана': ['Жұлдыз №1', 'Бөбек №2', 'Ақылды бала №3'],
+    'Шымкент': ['Гүлдер №1', 'Балапан №2', 'Ертегі №3'],
+  };
+
+  final List<String> _cities = ['Алматы', 'Астана', 'Шымкент'];
+  final List<String> _groups = [
+    'Младшая группа (2-3 года)',
+    'Средняя группа (3-4 года)',
+    'Старшая группа (4-5 года)',
+    'Подготовительная группа (5-6 лет)',
+  ];
 
   @override
   void dispose() {
     _childNameController.dispose();
-    _childBirthController.dispose();
+    _childIinController.dispose();
+    _childBirthYearController.dispose();
     super.dispose();
   }
 
@@ -31,7 +65,7 @@ class _QueuePageState extends State<QueuePage> {
         title: const Text('Постановка в очередь'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/login'),
+          onPressed: () => context.go('/dashboard'),
         ),
       ),
       body: Column(
@@ -52,7 +86,7 @@ class _QueuePageState extends State<QueuePage> {
       color: AppColors.backgroundPrimary,
       child: Row(
         children: [
-          _buildStepIndicator(0, 'Данные ребенка', _currentStep >= 0),
+          _buildStepIndicator(0, 'Общая информация', _currentStep >= 0),
           _buildSeparator(_currentStep >= 1),
           _buildStepIndicator(1, 'Документы', _currentStep >= 1),
           _buildSeparator(_currentStep >= 2),
@@ -87,11 +121,13 @@ class _QueuePageState extends State<QueuePage> {
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 11,
               color: isActive ? AppColors.primary : Colors.grey.shade600,
               fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             ),
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -109,7 +145,7 @@ class _QueuePageState extends State<QueuePage> {
   Widget _buildCurrentStepContent() {
     switch (_currentStep) {
       case 0:
-        return _buildChildInfoStep();
+        return _buildGeneralInfoStep();
       case 1:
         return _buildDocumentsStep();
       case 2:
@@ -119,107 +155,158 @@ class _QueuePageState extends State<QueuePage> {
     }
   }
 
-  Widget _buildChildInfoStep() {
+  Widget _buildGeneralInfoStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppDimensions.padding24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Данные ребенка', style: AppTextStyles.h2),
+          Text('Общая информация', style: AppTextStyles.h2),
           const SizedBox(height: AppDimensions.spacingSmall),
           Text(
-            'Введите информацию о ребенке для постановки в очередь',
+            'Заполните информацию о ребенке для постановки в очередь',
             style: AppTextStyles.body2,
           ),
           const SizedBox(height: AppDimensions.padding24),
+
+          // ФИО ребенка
           TextField(
             controller: _childNameController,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'ФИО ребенка',
-              prefixIcon: const Icon(Icons.person_outline),
+              hintText: 'Иванов Иван Иванович',
+              prefixIcon: Icon(Icons.person_outline),
+              border: OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: AppDimensions.spacingMedium),
-          GestureDetector(
-            onTap: () async {
-              final DateTime? pickedDate = await showDatePicker(
-                context: context,
-                initialDate: DateTime.now(),
-                firstDate: DateTime(DateTime.now().year - 7),
-                lastDate: DateTime.now(),
-                builder: (context, child) {
-                  return Theme(
-                    data: Theme.of(context).copyWith(
-                      colorScheme: const ColorScheme.light(
-                        primary: AppColors.primary,
-                      ),
-                    ),
-                    child: child!,
-                  );
-                },
-              );
 
-              if (pickedDate != null) {
-                setState(() {
-                  _selectedDate = pickedDate;
-                  _childBirthController.text =
-                      '${pickedDate.day}.${pickedDate.month}.${pickedDate.year}';
-                });
-              }
-            },
-            child: AbsorbPointer(
-              child: TextField(
-                controller: _childBirthController,
-                decoration: InputDecoration(
-                  labelText: 'Дата рождения',
-                  prefixIcon: const Icon(Icons.calendar_today),
-                ),
-              ),
+          // ИИН
+          TextField(
+            controller: _childIinController,
+            keyboardType: TextInputType.number,
+            maxLength: 12,
+            decoration: const InputDecoration(
+              labelText: 'ИИН ребенка',
+              hintText: '123456789012',
+              prefixIcon: Icon(Icons.credit_card),
+              border: OutlineInputBorder(),
+              counterText: '',
             ),
           ),
-          const SizedBox(height: AppDimensions.padding24),
-          _buildDropdown('Выберите детский сад', [
-            'Балдаурен',
-            'Солнышко',
-            'Радость',
-          ]),
           const SizedBox(height: AppDimensions.spacingMedium),
-          _buildDropdown('Выберите группу', ['Младшая', 'Средняя', 'Старшая']),
-          const SizedBox(height: AppDimensions.padding40),
-          ElevatedButton(
-            onPressed: () {
+
+          // Год рождения
+          TextField(
+            controller: _childBirthYearController,
+            keyboardType: TextInputType.number,
+            maxLength: 4,
+            decoration: const InputDecoration(
+              labelText: 'Год рождения ребенка',
+              hintText: '2020',
+              prefixIcon: Icon(Icons.calendar_today),
+              border: OutlineInputBorder(),
+              counterText: '',
+            ),
+          ),
+          const SizedBox(height: AppDimensions.spacingMedium),
+
+          // Населенный пункт
+          _buildDropdown('Населенный пункт', _cities, _selectedCity, (
+            String? value,
+          ) {
+            setState(() {
+              _selectedCity = value;
+              _selectedKindergarten = null; // Сбрасываем выбор детского сада
+            });
+          }),
+          const SizedBox(height: AppDimensions.spacingMedium),
+
+          // Дошкольная организация
+          _buildDropdown(
+            'Дошкольная организация',
+            _selectedCity != null
+                ? _kindergartensByCity[_selectedCity!] ?? []
+                : [],
+            _selectedKindergarten,
+            (String? value) {
               setState(() {
-                _currentStep = 1;
+                _selectedKindergarten = value;
               });
             },
-            child: Text('Продолжить', style: AppTextStyles.buttonText),
+            enabled: _selectedCity != null,
+          ),
+          const SizedBox(height: AppDimensions.spacingMedium),
+
+          // Группа
+          _buildDropdown('Год (Группа)', _groups, _selectedGroup, (
+            String? value,
+          ) {
+            setState(() {
+              _selectedGroup = value;
+            });
+          }),
+
+          const SizedBox(height: AppDimensions.padding40),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed:
+                  _canProceedToNextStep()
+                      ? () {
+                        setState(() {
+                          _currentStep = 1;
+                        });
+                      }
+                      : null,
+              child: Text('Продолжить', style: AppTextStyles.buttonText),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDropdown(String hint, List<String> items) {
+  bool _canProceedToNextStep() {
+    return _childNameController.text.isNotEmpty &&
+        _childIinController.text.length == 12 &&
+        _childBirthYearController.text.length == 4 &&
+        _selectedCity != null &&
+        _selectedKindergarten != null &&
+        _selectedGroup != null;
+  }
+
+  Widget _buildDropdown(
+    String label,
+    List<String> items,
+    String? selectedValue,
+    ValueChanged<String?> onChanged, {
+    bool enabled = true,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.padding12),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade400),
-        borderRadius: BorderRadius.circular(AppDimensions.radius12),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          isExpanded: true,
-          hint: Text(hint),
-          icon: const Icon(Icons.arrow_drop_down),
-          items:
-              items.map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-          onChanged: (String? newValue) {},
+        border: Border.all(
+          color: enabled ? Colors.grey.shade400 : Colors.grey.shade300,
         ),
+        borderRadius: BorderRadius.circular(AppDimensions.radius8),
+      ),
+      child: DropdownButtonFormField<String>(
+        value: selectedValue,
+        decoration: InputDecoration(
+          labelText: label,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.padding12,
+            vertical: AppDimensions.padding16,
+          ),
+        ),
+        items:
+            items.map((String value) {
+              return DropdownMenuItem<String>(value: value, child: Text(value));
+            }).toList(),
+        onChanged: enabled ? onChanged : null,
+        isExpanded: true,
       ),
     );
   }
@@ -237,12 +324,15 @@ class _QueuePageState extends State<QueuePage> {
             style: AppTextStyles.body2,
           ),
           const SizedBox(height: AppDimensions.padding24),
-          _buildDocumentUploadCard('Свидетельство о рождении'),
+
+          _buildDocumentUploadCard('Свидетельство о рождении ребенка'),
           const SizedBox(height: AppDimensions.spacingMedium),
-          _buildDocumentUploadCard('Удостоверение личности родителя'),
+          _buildDocumentUploadCard('Удостоверение личности родителя/опекуна'),
           const SizedBox(height: AppDimensions.spacingMedium),
-          _buildDocumentUploadCard('Медицинская справка'),
+          _buildDocumentUploadCard('Справка о составе семьи'),
+
           const SizedBox(height: AppDimensions.padding40),
+
           Row(
             children: [
               Expanded(
@@ -289,9 +379,10 @@ class _QueuePageState extends State<QueuePage> {
           ),
           const SizedBox(height: AppDimensions.spacingMedium),
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(30),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: Colors.grey.shade50,
               borderRadius: BorderRadius.circular(AppDimensions.radius8),
               border: Border.all(
                 color: Colors.grey.shade300,
@@ -299,26 +390,26 @@ class _QueuePageState extends State<QueuePage> {
                 width: 1.5,
               ),
             ),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.cloud_upload_outlined,
-                    size: 40,
-                    color: Colors.grey.shade600,
-                  ),
-                  const SizedBox(height: AppDimensions.spacingSmall),
-                  Text(
-                    'Перетащите файл или',
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text('выберите на устройстве'),
-                  ),
-                ],
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.cloud_upload_outlined,
+                  size: 40,
+                  color: Colors.grey.shade600,
+                ),
+                const SizedBox(height: AppDimensions.spacingSmall),
+                // Text(
+                //   'Перетащите файл или',
+                //   style: TextStyle(color: Colors.grey.shade600),
+                // ),
+                TextButton(
+                  onPressed: () {
+                    // TODO: Реализовать выбор файла
+                  },
+                  child: const Text('выберите на устройстве'),
+                ),
+              ],
             ),
           ),
         ],
@@ -339,8 +430,11 @@ class _QueuePageState extends State<QueuePage> {
             style: AppTextStyles.body2,
           ),
           const SizedBox(height: AppDimensions.padding24),
+
           _buildConfirmationCard(),
+
           const SizedBox(height: AppDimensions.spacingXLarge),
+
           Row(
             children: [
               Expanded(
@@ -359,7 +453,7 @@ class _QueuePageState extends State<QueuePage> {
                   onPressed: () {
                     _showSuccessDialog();
                   },
-                  child: const Text('Отправить заявку'),
+                  child: const Text('Отправить'),
                 ),
               ),
             ],
@@ -385,23 +479,17 @@ class _QueuePageState extends State<QueuePage> {
       ),
       child: Column(
         children: [
-          _buildInfoRow(
-            'ФИО ребенка',
-            _childNameController.text.isNotEmpty
-                ? _childNameController.text
-                : 'Иванов Иван Иванович',
-          ),
+          _buildInfoRow('ФИО ребенка', _childNameController.text),
           const Divider(),
-          _buildInfoRow(
-            'Дата рождения',
-            _childBirthController.text.isNotEmpty
-                ? _childBirthController.text
-                : '01.01.2019',
-          ),
+          _buildInfoRow('ИИН', _childIinController.text),
           const Divider(),
-          _buildInfoRow('Детский сад', 'Балдаурен'),
+          _buildInfoRow('Год рождения', _childBirthYearController.text),
           const Divider(),
-          _buildInfoRow('Группа', 'Младшая'),
+          _buildInfoRow('Населенный пункт', _selectedCity ?? ''),
+          const Divider(),
+          _buildInfoRow('Дошкольная организация', _selectedKindergarten ?? ''),
+          const Divider(),
+          _buildInfoRow('Группа', _selectedGroup ?? ''),
           const Divider(),
           _buildInfoRow('Документы', '3 файла загружено'),
           const Divider(),
@@ -418,12 +506,16 @@ class _QueuePageState extends State<QueuePage> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacingSmall),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: AppTextStyles.body2),
-          Text(
-            value,
-            style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.bold),
+          Expanded(flex: 2, child: Text(label, style: AppTextStyles.body2)),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.end,
+            ),
           ),
         ],
       ),
@@ -433,6 +525,7 @@ class _QueuePageState extends State<QueuePage> {
   void _showSuccessDialog() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -454,7 +547,38 @@ class _QueuePageState extends State<QueuePage> {
               ),
               const SizedBox(height: AppDimensions.spacingSmall),
               Text(
-                'Ваш номер в очереди: 42\nСтатус заявки можно отслеживать в личном кабинете',
+                'Ваш номер в очереди: 42',
+                style: AppTextStyles.body1.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppDimensions.spacingSmall),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.padding12,
+                  vertical: AppDimensions.spacingSmall,
+                ),
+                decoration: BoxDecoration(
+                  color: ApplicationStatus.acceptedToCompetition.color
+                      .withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppDimensions.radius8),
+                  border: Border.all(
+                    color: ApplicationStatus.acceptedToCompetition.color,
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  'Статус: ${ApplicationStatus.acceptedToCompetition.displayName}',
+                  style: TextStyle(
+                    color: ApplicationStatus.acceptedToCompetition.color,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spacingSmall),
+              Text(
+                'Статус заявки можно отслеживать в личном кабинете',
                 style: AppTextStyles.body2,
                 textAlign: TextAlign.center,
               ),
@@ -464,7 +588,6 @@ class _QueuePageState extends State<QueuePage> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    // Navigate to dashboard
                     context.go('/dashboard');
                   },
                   child: const Text('Вернуться на главную'),

@@ -1,4 +1,4 @@
-name: super_app_kindergarten
+name: kindy
 description: "A super app for kindergarten management."
 publish_to: 'none'
 
@@ -49,4 +49,11 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+
+  # Добавляем шрифты
+  fonts:
+    - family: Comic Sans MS
+      fonts:
+        - asset: assets/fonts/Comic Sans MS/Comic Sans MS.ttf
+          weight: 400
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:super_app_kindergarten/core/constants/app_colors.dart';
-import 'package:super_app_kindergarten/core/utils/screen_util.dart';
+import 'package:kindy/core/constants/app_colors.dart';
+import 'package:kindy/core/utils/screen_util.dart';
 
 /// Адаптивный контейнер, который изменяет свои размеры в зависимости от экрана
 class AdaptiveContainer extends StatelessWidget {

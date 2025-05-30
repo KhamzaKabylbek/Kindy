@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
-import 'package:super_app_kindergarten/core/constants/app_colors.dart';
-import 'package:super_app_kindergarten/core/constants/app_dimensions.dart';
-import 'package:super_app_kindergarten/core/constants/app_text_styles.dart';
-import 'package:super_app_kindergarten/core/utils/screen_util.dart';
-import 'package:super_app_kindergarten/shared/widgets/adaptive_widgets.dart';
+import 'package:kindy/core/constants/app_colors.dart';
+import 'package:kindy/core/constants/app_dimensions.dart';
+import 'package:kindy/core/constants/app_text_styles.dart';
+import 'package:kindy/core/utils/screen_util.dart';
+import 'package:kindy/shared/widgets/adaptive_widgets.dart';
 
 class ChildProfilePage extends StatefulWidget {
   final Map<String, dynamic> childData;
@@ -18,11 +19,20 @@ class ChildProfilePage extends StatefulWidget {
 class _ChildProfilePageState extends State<ChildProfilePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _isCollapsed = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+
+    // Проверяем начальное состояние после первой отрисовки
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _isCollapsed =
+            false; // Убеждаемся, что начальное состояние - развернутое
+      });
+    });
   }
 
   @override
@@ -55,155 +65,226 @@ class _ChildProfilePageState extends State<ChildProfilePage>
     return AdaptiveLayout(
       // Мобильный вид
       mobile: Scaffold(
-        body: NestedScrollView(
-          headerSliverBuilder:
-              (context, innerBoxIsScrolled) => [
-                SliverAppBar(
-                  expandedHeight:
-                      250, // Увеличена высота для лучшего отображения
-                  pinned: true,
-                  leading: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => context.pop(),
-                  ),
-                  flexibleSpace: FlexibleSpaceBar(
-                    centerTitle: true,
-                    title: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircleAvatar(
-                          radius: 40, // Увеличиваем радиус аватара
-                          backgroundColor: Colors.white.withOpacity(0.3),
-                          child: Text(
-                            childName.substring(0, 1),
+        body: NotificationListener<ScrollNotification>(
+          onNotification: (scrollNotification) {
+            // Проверяем прокрутку только для вертикальной оси
+            if (scrollNotification.metrics.axis == Axis.vertical) {
+              final pixels = scrollNotification.metrics.pixels;
+              // Показываем заголовок только если прокрутили больше чем на 80 пикселей
+              final newIsCollapsed = pixels > 80;
+
+              if (_isCollapsed != newIsCollapsed) {
+                setState(() {
+                  _isCollapsed = newIsCollapsed;
+                });
+              }
+            }
+            return false;
+          },
+          child: NestedScrollView(
+            headerSliverBuilder:
+                (context, innerBoxIsScrolled) => [
+                  SliverAppBar(
+                    expandedHeight:
+                        270, // Уменьшаем с 250 до 220 для более компактного вида
+                    pinned: true,
+                    leading: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => context.pop(),
+                    ),
+                    title: AnimatedOpacity(
+                      opacity: _isCollapsed ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 18,
+                            backgroundColor: Colors.white.withOpacity(0.3),
+                            child: Text(
+                              childName.substring(0, 1),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            childName,
                             style: const TextStyle(
-                              fontSize: 32, // Увеличиваем размер шрифта
-                              fontWeight: FontWeight.bold,
                               color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 16), // Увеличиваем отступ
-                        Text(
-                          childName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: ScreenUtil.adaptiveValue(
-                              mobile: 20.0, // Увеличиваем шрифт
-                              tablet: 22.0,
-                              desktop: 24.0,
-                            ),
-                            color: Colors.white,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                    titlePadding: const EdgeInsets.only(
-                      bottom: 60,
-                    ), // Значительно увеличиваем отступ снизу, чтобы поднять содержимое
-                    background: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: AppColors.mainGradient,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(48),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.95),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.shadowColor,
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
                           ),
                         ],
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(18),
-                        ),
                       ),
-                      child: TabBar(
-                        controller: _tabController,
-                        labelColor: Colors.white,
-                        unselectedLabelColor: Colors.grey.shade600,
-                        labelStyle: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                        isScrollable: false,
-                        indicator: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [AppColors.primary, AppColors.secondary],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                    ),
+                    backgroundColor: AppColors.primary,
+                    flexibleSpace: FlexibleSpaceBar(
+                      centerTitle: true,
+                      expandedTitleScale: 1.0,
+                      background: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: AppColors.mainGradient,
+                              ),
+                            ),
                           ),
-                          borderRadius: BorderRadius.circular(16),
+                          // Большая аватарка и имя только для развернутого состояния
+                          SafeArea(
+                            child: Center(
+                              child: AnimatedOpacity(
+                                opacity: !_isCollapsed ? 1.0 : 0.0,
+                                duration: const Duration(milliseconds: 200),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const SizedBox(height: 72),
+                                    CircleAvatar(
+                                      radius: 50,
+                                      backgroundColor: Colors.white.withOpacity(
+                                        0.3,
+                                      ),
+                                      child: Text(
+                                        childName.substring(0, 1),
+                                        style: const TextStyle(
+                                          fontSize: 40,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      childName,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: ScreenUtil.adaptiveValue(
+                                          mobile: 24.0,
+                                          tablet: 28.0,
+                                          desktop: 32.0,
+                                        ),
+                                        color: Colors.white,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '$ageText • $childGroup',
+                                      style: TextStyle(
+                                        fontSize: ScreenUtil.adaptiveValue(
+                                          mobile: 15.0,
+                                          tablet: 17.0,
+                                          desktop: 19.0,
+                                        ),
+                                        color: Colors.white.withOpacity(0.92),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    bottom: PreferredSize(
+                      preferredSize: const Size.fromHeight(48),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.95),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.18),
+                              color: AppColors.shadowColor,
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
                           ],
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(18),
+                          ),
                         ),
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        tabs: [
-                          SizedBox(
-                            width: ScreenUtil.adaptiveValue(
-                              mobile: ScreenUtil.screenWidth / 4 - 10,
-                              tablet: 100,
-                              desktop: 120,
-                            ),
-                            child: const Tab(text: 'Профиль'),
+                        child: TabBar(
+                          controller: _tabController,
+                          labelColor: Colors.white,
+                          unselectedLabelColor: Colors.grey.shade600,
+                          labelStyle: const TextStyle(
+                            fontWeight: FontWeight.bold,
                           ),
-                          SizedBox(
-                            width: ScreenUtil.adaptiveValue(
-                              mobile: ScreenUtil.screenWidth / 4 - 10,
-                              tablet: 100,
-                              desktop: 120,
+                          isScrollable: false,
+                          indicator: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [AppColors.primary, AppColors.secondary],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                            child: const Tab(text: 'Дневник'),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.18),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
-                          SizedBox(
-                            width: ScreenUtil.adaptiveValue(
-                              mobile: ScreenUtil.screenWidth / 4 - 10,
-                              tablet: 100,
-                              desktop: 120,
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          tabs: [
+                            SizedBox(
+                              width: ScreenUtil.adaptiveValue(
+                                mobile: ScreenUtil.screenWidth / 4 - 10,
+                                tablet: 100,
+                                desktop: 120,
+                              ),
+                              child: const Tab(text: 'Профиль'),
                             ),
-                            child: const Tab(text: 'Расписание'),
-                          ),
-                          SizedBox(
-                            width: ScreenUtil.adaptiveValue(
-                              mobile: ScreenUtil.screenWidth / 4 - 10,
-                              tablet: 100,
-                              desktop: 120,
+                            SizedBox(
+                              width: ScreenUtil.adaptiveValue(
+                                mobile: ScreenUtil.screenWidth / 4 - 10,
+                                tablet: 100,
+                                desktop: 120,
+                              ),
+                              child: const Tab(text: 'Дневник'),
                             ),
-                            child: const Tab(text: 'Меню'),
-                          ),
-                        ],
+                            SizedBox(
+                              width: ScreenUtil.adaptiveValue(
+                                mobile: ScreenUtil.screenWidth / 4 - 10,
+                                tablet: 100,
+                                desktop: 120,
+                              ),
+                              child: const Tab(text: 'Расписание'),
+                            ),
+                            SizedBox(
+                              width: ScreenUtil.adaptiveValue(
+                                mobile: ScreenUtil.screenWidth / 4 - 10,
+                                tablet: 100,
+                                desktop: 120,
+                              ),
+                              child: const Tab(text: 'Меню'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
+            body: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildProfileTab(childName, ageText, childGroup),
+                _buildDiaryTab(),
+                _buildScheduleTab(),
+                _buildMenuTab(),
               ],
-          body: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildProfileTab(childName, ageText, childGroup),
-              _buildDiaryTab(),
-              _buildScheduleTab(),
-              _buildMenuTab(),
-            ],
+            ),
           ),
         ),
       ),
@@ -1024,35 +1105,46 @@ class _ChildProfilePageState extends State<ChildProfilePage>
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(borderRadius),
               ),
-              child: ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: scheduleItems.length,
-                separatorBuilder: (context, index) => const Divider(),
-                itemBuilder: (context, index) {
-                  final item = scheduleItems[index];
-                  return ListTile(
-                    leading: Container(
-                      padding: EdgeInsets.all(
-                        AppDimensions.getAdaptivePadding(8),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(borderRadius),
+                child: ListView.separated(
+                  padding:
+                      EdgeInsets.zero, // Убираем внутренний padding ListView
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: scheduleItems.length,
+                  separatorBuilder:
+                      (context, index) =>
+                          const Divider(height: 1, thickness: 1),
+                  itemBuilder: (context, index) {
+                    final item = scheduleItems[index];
+                    return ListTile(
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: AppDimensions.getAdaptivePadding(20),
+                        vertical: AppDimensions.getAdaptivePadding(12),
                       ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        shape: BoxShape.circle,
+                      leading: Container(
+                        padding: EdgeInsets.all(
+                          AppDimensions.getAdaptivePadding(8),
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          item['icon'] as IconData,
+                          color: AppColors.primary,
+                          size: AppDimensions.getAdaptiveIconSize(18),
+                        ),
                       ),
-                      child: Icon(
-                        item['icon'] as IconData,
-                        color: AppColors.primary,
-                        size: AppDimensions.getAdaptiveIconSize(24),
+                      title: AdaptiveText(
+                        item['activity'] as String,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                    ),
-                    title: AdaptiveText(
-                      item['activity'] as String,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: AdaptiveText(item['time'] as String),
-                  );
-                },
+                      subtitle: AdaptiveText(item['time'] as String),
+                    );
+                  },
+                ),
               ),
             ),
           ],
@@ -1178,7 +1270,9 @@ class _ChildProfilePageState extends State<ChildProfilePage>
                                       Icon(
                                         item['icon'] as IconData,
                                         color: AppColors.primary,
-                                        size: 20,
+                                        size: AppDimensions.getAdaptiveIconSize(
+                                          18,
+                                        ),
                                       ),
                                       SizedBox(width: 8),
                                       Expanded(

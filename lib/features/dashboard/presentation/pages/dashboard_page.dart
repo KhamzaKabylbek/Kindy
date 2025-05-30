@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:super_app_kindergarten/core/constants/app_colors.dart';
-import 'package:super_app_kindergarten/core/constants/app_dimensions.dart';
-import 'package:super_app_kindergarten/core/constants/app_text_styles.dart';
-import 'package:super_app_kindergarten/core/utils/screen_util.dart';
-import 'package:super_app_kindergarten/shared/widgets/adaptive_widgets.dart';
+import 'package:kindy/core/constants/app_colors.dart';
+import 'package:kindy/core/constants/app_dimensions.dart';
+import 'package:kindy/core/constants/app_text_styles.dart';
+import 'package:kindy/core/utils/screen_util.dart';
+import 'package:kindy/shared/widgets/adaptive_widgets.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -241,10 +241,11 @@ class _DashboardPageState extends State<DashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'BalaBaqsha',
+                  'Kindy.kz',
                   style: AppTextStyles.h3.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.bold,
+                    fontFamily: 'Comic Sans MS',
                   ),
                 ),
                 Text(
@@ -976,21 +977,26 @@ class _DashboardPageState extends State<DashboardPage> {
               padding: EdgeInsets.all(padding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  AdaptiveText(
-                    title,
-                    style: AppTextStyles.body1.copyWith(
-                      fontWeight: FontWeight.bold,
+                  Flexible(
+                    child: AdaptiveText(
+                      title,
+                      style: AppTextStyles.body1.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  AdaptiveText(
-                    description,
-                    style: AppTextStyles.body3,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  Flexible(
+                    child: AdaptiveText(
+                      description,
+                      style: AppTextStyles.body3,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
@@ -1210,10 +1216,23 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      AdaptiveText(title, style: AppTextStyles.h3),
-                      AdaptiveText(
-                        dateTime,
-                        style: AppTextStyles.body2.copyWith(color: Colors.grey),
+                      Flexible(
+                        child: AdaptiveText(
+                          title,
+                          style: AppTextStyles.h3,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Flexible(
+                        child: AdaptiveText(
+                          dateTime,
+                          style: AppTextStyles.body2.copyWith(
+                            color: Colors.grey,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
@@ -1225,7 +1244,14 @@ class _DashboardPageState extends State<DashboardPage> {
                 AppDimensions.spacingMedium,
               ),
             ),
-            AdaptiveText(description, style: AppTextStyles.body2),
+            Flexible(
+              child: AdaptiveText(
+                description,
+                style: AppTextStyles.body2,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             SizedBox(
               height: AppDimensions.getAdaptivePadding(
                 AppDimensions.spacingMedium,
@@ -1517,27 +1543,39 @@ class _DashboardPageState extends State<DashboardPage> {
                   AppDimensions.spacingSmall,
                 ),
               ),
-              AdaptiveText(
-                name,
-                style: AppTextStyles.h3.copyWith(
-                  color: isActive ? AppColors.primary : AppColors.textPrimary,
-                  fontSize: ScreenUtil.adaptiveValue(
-                    mobile: 18.0,
-                    tablet: 20.0,
-                    desktop: 22.0,
+              Flexible(
+                child: AdaptiveText(
+                  name,
+                  style: AppTextStyles.h3.copyWith(
+                    color: isActive ? AppColors.primary : AppColors.textPrimary,
+                    fontSize: ScreenUtil.adaptiveValue(
+                      mobile: 18.0,
+                      tablet: 20.0,
+                      desktop: 22.0,
+                    ),
                   ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                textAlign: TextAlign.center,
               ),
-              AdaptiveText(
-                '$age ${_getAgeText(age)}',
-                style: AppTextStyles.body2,
-                textAlign: TextAlign.center,
+              Flexible(
+                child: AdaptiveText(
+                  '$age ${_getAgeText(age)}',
+                  style: AppTextStyles.body2,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              AdaptiveText(
-                group,
-                style: AppTextStyles.body2,
-                textAlign: TextAlign.center,
+              Flexible(
+                child: AdaptiveText(
+                  group,
+                  style: AppTextStyles.body2,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               SizedBox(
                 height: AppDimensions.getAdaptivePadding(

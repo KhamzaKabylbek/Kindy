@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:super_app_kindergarten/core/constants/app_colors.dart';
+import 'package:kindy/core/constants/app_colors.dart';
 
 class AppTextStyles {
   // Headings

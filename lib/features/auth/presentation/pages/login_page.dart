@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:super_app_kindergarten/core/constants/app_colors.dart';
-import 'package:super_app_kindergarten/core/constants/app_dimensions.dart';
-import 'package:super_app_kindergarten/core/constants/app_text_styles.dart';
-import 'package:super_app_kindergarten/core/utils/screen_util.dart';
-import 'package:super_app_kindergarten/shared/widgets/adaptive_form.dart'
-    as form;
-import 'package:super_app_kindergarten/shared/widgets/adaptive_widgets.dart';
-import 'package:super_app_kindergarten/shared/widgets/kindergarten_illustration.dart';
+import 'package:kindy/core/constants/app_colors.dart';
+import 'package:kindy/core/constants/app_dimensions.dart';
+import 'package:kindy/core/constants/app_text_styles.dart';
+import 'package:kindy/core/utils/screen_util.dart';
+import 'package:kindy/shared/widgets/adaptive_form.dart' as form;
+import 'package:kindy/shared/widgets/adaptive_widgets.dart';
+import 'package:kindy/shared/widgets/kindergarten_illustration.dart';
 
 class KindergartenLoginPage extends StatefulWidget {
   const KindergartenLoginPage({super.key});
@@ -35,6 +34,7 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
         const SnackBar(
           content: Text('Пожалуйста, заполните все поля'),
           backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
         ),
       );
       return;
@@ -60,6 +60,7 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
       const SnackBar(
         content: Text('Вход с помощью ЭЦП будет доступен в ближайшее время'),
         backgroundColor: AppColors.info,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -87,33 +88,18 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
         ),
         child: SafeArea(
           child: AdaptiveLayout(
-            // Мобильная версия - точное соответствие Figma
+            // Мобильная версия - красивый дизайн без анимаций
             mobile: Stack(
               children: [
-                // Фоновая иллюстрация (если нужна)
-                Positioned.fill(
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: AppColors.figmaPastelGradient,
-                        stops: [0.0, 0.3, 0.7, 1.0],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Основная карточка логина - увеличиваем высоту и подгоняем отступы
+                // Основная карточка логина
                 Center(
                   child: Container(
-                    width: 299,
-                    height:
-                        450, // Увеличена высота для размещения кнопки регистрации
+                    width: 340,
+                    height: 520,
                     margin: const EdgeInsets.symmetric(horizontal: 24),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.1),
@@ -122,42 +108,53 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
                         ),
                       ],
                     ),
-                    child: SingleChildScrollView(
-                      // Добавляем прокрутку для предотвращения overflow
+                    child: Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 44,
-                        vertical: 25, // Уменьшаем отступ
+                        horizontal: 30,
+                        vertical: 25,
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Заголовок "ВХОД В СИСТЕМУ"
-                          Text(
-                            'Kindy.kz',
-                            style: TextStyle(
-                              fontFamily: 'Comic Sans MS',
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.figmaGreen,
-                              letterSpacing: 0,
-                              height: 1.39,
+                          const SizedBox(height: 15),
+
+                          // Логотип
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 25,
+                              vertical: 10,
                             ),
-                            textAlign: TextAlign.center,
+                            decoration: BoxDecoration(
+                              color: AppColors.figmaGreen,
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: Text(
+                              'Kindy.kz',
+                              style: TextStyle(
+                                fontFamily: 'Comic Sans MS',
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
 
-                          const SizedBox(height: 24), // Уменьшаем отступ
+                          const SizedBox(height: 30),
+
                           // Поле ввода email
-                          _buildFigmaTextField(
+                          _buildTextField(
                             controller: _emailController,
                             hintText: 'Введите почту',
                             keyboardType: TextInputType.emailAddress,
                           ),
 
-                          const SizedBox(height: 12), // Уменьшаем отступ
-                          // Поле ввода пароля
-                          _buildFigmaPasswordField(),
+                          const SizedBox(height: 15),
 
-                          const SizedBox(height: 6), // Уменьшаем отступ
+                          // Поле ввода пароля
+                          _buildPasswordField(),
+
+                          const SizedBox(height: 8),
+
                           // Ссылка "Забыли пароль?"
                           Align(
                             alignment: Alignment.centerRight,
@@ -168,28 +165,31 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
                                 style: TextStyle(
                                   fontFamily: 'Roboto',
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w400,
+                                  fontWeight: FontWeight.w500,
                                   fontStyle: FontStyle.italic,
-                                  color: AppColors.figmaTextSecondary,
-                                  height: 0.85,
+                                  color: AppColors.figmaGreen,
                                 ),
                               ),
                             ),
                           ),
 
-                          const SizedBox(height: 18), // Уменьшаем отступ
+                          const SizedBox(height: 25),
+
                           // Кнопка "Войти"
                           _buildLoginButton(),
 
-                          const SizedBox(height: 12), // Уменьшаем отступ
+                          const SizedBox(height: 15),
+
                           // Разделитель "или"
                           _buildOrDivider(),
 
-                          const SizedBox(height: 10), // Уменьшаем отступ
+                          const SizedBox(height: 15),
+
                           // Кнопка "Войти с помощью ЭЦП"
                           _buildDigitalSignatureButton(),
 
-                          const SizedBox(height: 12), // Добавляем отступ
+                          const SizedBox(height: 12),
+
                           // Кнопка "Регистрация"
                           _buildRegisterButton(),
                         ],
@@ -198,13 +198,12 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
                   ),
                 ),
 
-                // Иллюстрация детей внизу - фиксированная позиция
+                // Иллюстрация детей внизу
                 Positioned(
-                  bottom: 40, // Фиксированная позиция от низа экрана
+                  bottom: 40,
                   left: 0,
                   right: 0,
                   child: IgnorePointer(
-                    // Игнорируем прикосновения к изображению
                     child: Center(
                       child: SizedBox(
                         width: 300,
@@ -220,69 +219,33 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
               ],
             ),
 
-            // Планшетная версия - адаптированная
-            tablet: Scaffold(
-              resizeToAvoidBottomInset: false, // Также для планшетной версии
-              body: Center(
-                child: Container(
-                  width: 500,
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Card(
-                    elevation: 20,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(60),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'ВХОД В СИСТЕМУ',
-                            style: TextStyle(
-                              fontFamily: 'System',
-                              fontSize: 30,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.figmaGreen,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 40),
-                          _buildTabletForm(),
-                          const SizedBox(height: 40),
-                          KindergartenIllustration(height: 120),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            // Планшетная версия
+            tablet: _buildTabletVersion(),
           ),
         ),
       ),
     );
   }
 
-  // Поле ввода в стиле Figma
-  Widget _buildFigmaTextField({
+  // Поле ввода
+  Widget _buildTextField({
     required TextEditingController controller,
     required String hintText,
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Container(
-      width: 230,
-      height: 42,
+      width: 280,
+      height: 45,
       decoration: BoxDecoration(
-        color: AppColors.figmaInputBackground,
-        borderRadius: BorderRadius.circular(9),
+        color: Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
         style: const TextStyle(
           fontFamily: 'Roboto',
-          fontSize: 14,
+          fontSize: 15,
           fontWeight: FontWeight.w400,
           color: Colors.black87,
         ),
@@ -292,26 +255,26 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
             fontFamily: 'Roboto',
             fontSize: 15,
             fontWeight: FontWeight.w400,
-            color: AppColors.figmaTextSecondary.withOpacity(0.7),
+            color: Colors.grey.shade500,
           ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 12,
+            horizontal: 18,
+            vertical: 13,
           ),
         ),
       ),
     );
   }
 
-  // Поле ввода пароля с иконкой глаза
-  Widget _buildFigmaPasswordField() {
+  // Поле ввода пароля
+  Widget _buildPasswordField() {
     return Container(
-      width: 230,
-      height: 42,
+      width: 280,
+      height: 45,
       decoration: BoxDecoration(
-        color: AppColors.figmaInputBackground,
-        borderRadius: BorderRadius.circular(9),
+        color: Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
@@ -321,7 +284,7 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
               obscureText: _obscurePassword,
               style: const TextStyle(
                 fontFamily: 'Roboto',
-                fontSize: 14,
+                fontSize: 15,
                 fontWeight: FontWeight.w400,
                 color: Colors.black87,
               ),
@@ -331,12 +294,12 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
                   fontFamily: 'Roboto',
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
-                  color: AppColors.figmaTextSecondary.withOpacity(0.7),
+                  color: Colors.grey.shade500,
                 ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 12,
+                  horizontal: 18,
+                  vertical: 13,
                 ),
               ),
             ),
@@ -348,10 +311,10 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
               });
             },
             child: Padding(
-              padding: const EdgeInsets.only(right: 10),
+              padding: const EdgeInsets.only(right: 18),
               child: Icon(
                 _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                size: 18,
+                size: 20,
                 color: Colors.grey.shade400,
               ),
             ),
@@ -366,31 +329,30 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
     return GestureDetector(
       onTap: _isLoading ? null : _handleLogin,
       child: Container(
-        width: 230,
-        height: 36,
+        width: 280,
+        height: 45,
         decoration: BoxDecoration(
           color: AppColors.figmaGreen,
-          borderRadius: BorderRadius.circular(9),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Center(
           child:
               _isLoading
                   ? SizedBox(
-                    width: 18,
-                    height: 18,
+                    width: 22,
+                    height: 22,
                     child: CircularProgressIndicator(
                       color: Colors.white,
-                      strokeWidth: 1.8,
+                      strokeWidth: 2,
                     ),
                   )
                   : Text(
                     'Войти',
                     style: TextStyle(
                       fontFamily: 'Roboto',
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
                       color: Colors.white,
-                      height: 1.17,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -402,61 +364,49 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
   // Разделитель "или"
   Widget _buildOrDivider() {
     return SizedBox(
-      width: 210,
-      height: 8,
+      width: 280,
+      height: 20,
       child: Row(
         children: [
-          Expanded(
-            child: Container(
-              height: 1,
-              color: Color(0xFF707070).withOpacity(0.78),
-            ),
-          ),
+          Expanded(child: Container(height: 1, color: Colors.grey.shade300)),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 15),
             child: Text(
               'или',
               style: TextStyle(
                 fontFamily: 'Roboto',
-                fontSize: 8,
-                fontWeight: FontWeight.w300,
-                color: Color(0xFF707070).withOpacity(0.78),
-                height: 1.17,
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Colors.grey.shade600,
               ),
             ),
           ),
-          Expanded(
-            child: Container(
-              height: 1,
-              color: Color(0xFF707070).withOpacity(0.78),
-            ),
-          ),
+          Expanded(child: Container(height: 1, color: Colors.grey.shade300)),
         ],
       ),
     );
   }
 
-  // Кнопка "Войти с помощью ЭЦП"
+  // Кнопка ЭЦП
   Widget _buildDigitalSignatureButton() {
     return GestureDetector(
       onTap: _handleDigitalSignatureLogin,
       child: Container(
-        width: 230,
-        height: 32, // Уменьшаем высоту
+        width: 280,
+        height: 45,
         decoration: BoxDecoration(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(9),
-          border: Border.all(color: AppColors.figmaGreen, width: 1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.figmaGreen, width: 1.5),
         ),
         child: Center(
           child: Text(
             'Войти с помощью ЭЦП',
             style: TextStyle(
               fontFamily: 'Roboto',
-              fontSize: 13, // Уменьшаем размер шрифта
+              fontSize: 13,
               fontWeight: FontWeight.w500,
               color: AppColors.figmaGreen,
-              height: 1.17,
             ),
             textAlign: TextAlign.center,
           ),
@@ -465,17 +415,17 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
     );
   }
 
-  // Кнопка "Регистрация"
+  // Кнопка регистрации
   Widget _buildRegisterButton() {
     return GestureDetector(
       onTap: _handleRegister,
       child: Container(
-        width: 230,
-        height: 32,
+        width: 280,
+        height: 45,
         decoration: BoxDecoration(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(9),
-          border: Border.all(color: AppColors.figmaTextSecondary, width: 1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade400, width: 1.5),
         ),
         child: Center(
           child: Text(
@@ -484,10 +434,50 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
               fontFamily: 'Roboto',
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppColors.figmaTextSecondary,
-              height: 1.17,
+              color: Colors.grey.shade600,
             ),
             textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Планшетная версия
+  Widget _buildTabletVersion() {
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      body: Center(
+        child: Container(
+          width: 500,
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          child: Card(
+            elevation: 20,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(60),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Kindy.kz',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 36,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.figmaGreen,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 40),
+                  _buildTabletForm(),
+                  const SizedBox(height: 40),
+                  KindergartenIllustration(height: 120),
+                ],
+              ),
+            ),
           ),
         ),
       ),
