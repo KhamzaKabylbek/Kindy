@@ -17,32 +17,133 @@ class ChildProfilePage extends StatefulWidget {
 }
 
 class _ChildProfilePageState extends State<ChildProfilePage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TabController _tabController;
+  TabController? _menuTabController;
   bool _isCollapsed = false;
+  final int tabCount = 6; // Выносим количество вкладок в константу
+
+  // Ключи для компонентов, гарантирующие их правильное отображение
+  final GlobalKey _tabBarKey = GlobalKey();
+  final GlobalKey _mobileTabBarViewKey = GlobalKey();
+  final GlobalKey _tabletTabBarViewKey = GlobalKey();
+
+  // Создаем заранее содержимое сложных вкладок
+  late final Widget _attendanceTabContent;
+  late final Widget _medicalCertificatesTabContent;
+
+  // Флаг для блокировки обновления состояния во время анимации
+  bool _isUpdating = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+
+    // Инициализируем содержимое вкладок заранее
+    _attendanceTabContent = _buildAttendanceTab();
+    _medicalCertificatesTabContent = _buildMedicalCertificatesTab();
+
+    // Создаем TabController с явным указанием начального индекса и фиксированным числом вкладок
+    _tabController = TabController(
+      length: tabCount,
+      vsync: this,
+      initialIndex: 0,
+      animationDuration: const Duration(milliseconds: 300),
+    );
+
+    // Добавляем слушатель изменений вкладки
+    _tabController.addListener(_handleTabChange);
 
     // Проверяем начальное состояние после первой отрисовки
     SchedulerBinding.instance.addPostFrameCallback((_) {
       setState(() {
-        _isCollapsed =
-            false; // Убеждаемся, что начальное состояние - развернутое
+        _isCollapsed = false;
       });
     });
   }
 
+  void _handleTabChange() {
+    // Проверяем, нужно ли обновить состояние
+    if (!_tabController.indexIsChanging) {
+      print('Переключение на вкладку: ${_tabController.index}');
+      setState(() {});
+    }
+  }
+
   @override
   void dispose() {
+    // Очищаем слушатель перед освобождением контроллера
+    _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
+    _menuTabController?.dispose();
     super.dispose();
   }
 
   @override
+  void didUpdateWidget(ChildProfilePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Если количество вкладок изменилось, пересоздаем контроллер
+    if (_tabController.length != tabCount) {
+      print('Обнаружено несоответствие в количестве вкладок в didUpdateWidget');
+      try {
+        _tabController.dispose();
+      } catch (e) {
+        print('Ошибка при освобождении _tabController в didUpdateWidget: $e');
+      }
+
+      _tabController = TabController(
+        length: tabCount,
+        vsync: this,
+        initialIndex: 0,
+        animationDuration: const Duration(milliseconds: 300),
+      );
+
+      // Убедимся, что State обновится
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        setState(() {});
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    print(
+      'Build вызван: TabController.length = ${_tabController.length}, требуется $tabCount',
+    );
+
+    // Проверяем, совпадает ли длина контроллера с нужным количеством вкладок
+    if (_tabController.length != tabCount) {
+      print(
+        'Обнаружено несоответствие в количестве вкладок, пересоздаем контроллер',
+      );
+
+      // Принудительно пересоздаем TabController без задержки
+      try {
+        _tabController.dispose();
+      } catch (e) {
+        print('Ошибка при освобождении _tabController в build: $e');
+      }
+
+      _tabController = TabController(
+        length: tabCount,
+        vsync: this,
+        initialIndex: 0,
+        animationDuration: const Duration(milliseconds: 300),
+      );
+
+      // Возвращаем индикатор загрузки чтобы не было ошибок при смене вкладок
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    // Убедимся, что содержимое вкладок создано, если оно еще не было инициализировано
+    if (_attendanceTabContent == null) {
+      _attendanceTabContent = _buildAttendanceTab();
+    }
+    if (_medicalCertificatesTabContent == null) {
+      _medicalCertificatesTabContent = _buildMedicalCertificatesTab();
+    }
+
     // Инициализируем ScreenUtil для получения правильных размеров экрана
     ScreenUtil.init(context);
 
@@ -86,7 +187,7 @@ class _ChildProfilePageState extends State<ChildProfilePage>
                 (context, innerBoxIsScrolled) => [
                   SliverAppBar(
                     expandedHeight:
-                        270, // Уменьшаем с 250 до 220 для более компактного вида
+                        310, // Увеличиваем высоту для лучшего расположения аватара
                     pinned: true,
                     leading: IconButton(
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -146,22 +247,24 @@ class _ChildProfilePageState extends State<ChildProfilePage>
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const SizedBox(height: 72),
+                                    // Уменьшаем верхний отступ, чтобы поднять аватар еще выше
+                                    const SizedBox(height: 35),
                                     CircleAvatar(
-                                      radius: 50,
+                                      radius: 45,
                                       backgroundColor: Colors.white.withOpacity(
                                         0.3,
                                       ),
                                       child: Text(
                                         childName.substring(0, 1),
                                         style: const TextStyle(
-                                          fontSize: 40,
+                                          fontSize: 36,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(height: 10),
+                                    // Увеличиваем отступ между аватаром и именем
+                                    const SizedBox(height: 8),
                                     Text(
                                       childName,
                                       style: TextStyle(
@@ -175,6 +278,7 @@ class _ChildProfilePageState extends State<ChildProfilePage>
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
+                                    // Восстанавливаем отступ между именем и возрастом
                                     const SizedBox(height: 8),
                                     Text(
                                       '$ageText • $childGroup',
@@ -214,6 +318,7 @@ class _ChildProfilePageState extends State<ChildProfilePage>
                           ),
                         ),
                         child: TabBar(
+                          key: _tabBarKey,
                           controller: _tabController,
                           labelColor: Colors.white,
                           unselectedLabelColor: Colors.grey.shade600,
@@ -221,54 +326,60 @@ class _ChildProfilePageState extends State<ChildProfilePage>
                             fontWeight: FontWeight.bold,
                           ),
                           isScrollable: false,
+                          onTap: (index) {
+                            print('TabBar onTap: $index');
+                            if (index < tabCount) {
+                              setState(() {
+                                _tabController.animateTo(index);
+                              });
+                            } else {
+                              print(
+                                'Ошибка: индекс $index превышает количество вкладок $tabCount',
+                              );
+                            }
+                          },
+                          // Упрощаем индикатор для лучшей совместимости
                           indicator: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [AppColors.primary, AppColors.secondary],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withOpacity(0.18),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           indicatorSize: TabBarIndicatorSize.tab,
                           tabs: [
-                            SizedBox(
-                              width: ScreenUtil.adaptiveValue(
-                                mobile: ScreenUtil.screenWidth / 4 - 10,
-                                tablet: 100,
-                                desktop: 120,
+                            Tab(
+                              child: Tooltip(
+                                message: 'Профиль',
+                                child: Icon(Icons.person),
                               ),
-                              child: const Tab(text: 'Профиль'),
                             ),
-                            SizedBox(
-                              width: ScreenUtil.adaptiveValue(
-                                mobile: ScreenUtil.screenWidth / 4 - 10,
-                                tablet: 100,
-                                desktop: 120,
+                            Tab(
+                              child: Tooltip(
+                                message: 'Дневник',
+                                child: Icon(Icons.book),
                               ),
-                              child: const Tab(text: 'Дневник'),
                             ),
-                            SizedBox(
-                              width: ScreenUtil.adaptiveValue(
-                                mobile: ScreenUtil.screenWidth / 4 - 10,
-                                tablet: 100,
-                                desktop: 120,
+                            Tab(
+                              child: Tooltip(
+                                message: 'Расписание',
+                                child: Icon(Icons.schedule),
                               ),
-                              child: const Tab(text: 'Расписание'),
                             ),
-                            SizedBox(
-                              width: ScreenUtil.adaptiveValue(
-                                mobile: ScreenUtil.screenWidth / 4 - 10,
-                                tablet: 100,
-                                desktop: 120,
+                            Tab(
+                              child: Tooltip(
+                                message: 'Меню',
+                                child: Icon(Icons.restaurant_menu),
                               ),
-                              child: const Tab(text: 'Меню'),
+                            ),
+                            Tab(
+                              child: Tooltip(
+                                message: 'Посещаемость',
+                                child: Icon(Icons.calendar_today),
+                              ),
+                            ),
+                            Tab(
+                              child: Tooltip(
+                                message: 'Справки',
+                                child: Icon(Icons.medical_services),
+                              ),
                             ),
                           ],
                         ),
@@ -277,12 +388,22 @@ class _ChildProfilePageState extends State<ChildProfilePage>
                   ),
                 ],
             body: TabBarView(
+              key: _mobileTabBarViewKey,
               controller: _tabController,
               children: [
                 _buildProfileTab(childName, ageText, childGroup),
                 _buildDiaryTab(),
                 _buildScheduleTab(),
                 _buildMenuTab(),
+                // Используем заранее созданное содержимое с ключами
+                Container(
+                  key: const ValueKey('attendance_tab'),
+                  child: _attendanceTabContent,
+                ),
+                Container(
+                  key: const ValueKey('medical_tab'),
+                  child: _medicalCertificatesTabContent,
+                ),
               ],
             ),
           ),
@@ -426,6 +547,28 @@ class _ChildProfilePageState extends State<ChildProfilePage>
                         });
                       },
                     ),
+                    _buildSidebarMenuItem(
+                      'Посещаемость',
+                      Icons.calendar_today,
+                      _tabController.index == 4,
+                      () {
+                        print('Переключение на вкладку Посещаемость (4)');
+                        setState(() {
+                          _tabController.animateTo(4);
+                        });
+                      },
+                    ),
+                    _buildSidebarMenuItem(
+                      'Справки',
+                      Icons.medical_services,
+                      _tabController.index == 5,
+                      () {
+                        print('Переключение на вкладку Справки (5)');
+                        setState(() {
+                          _tabController.animateTo(5);
+                        });
+                      },
+                    ),
                     const Divider(),
                     SizedBox(
                       height: AppDimensions.getAdaptivePadding(
@@ -449,12 +592,22 @@ class _ChildProfilePageState extends State<ChildProfilePage>
             // Правая панель с содержимым
             Expanded(
               child: TabBarView(
+                key: _tabletTabBarViewKey,
                 controller: _tabController,
                 children: [
                   _buildProfileTab(childName, ageText, childGroup),
                   _buildDiaryTab(),
                   _buildScheduleTab(),
                   _buildMenuTab(),
+                  // Используем заранее созданное содержимое с ключами
+                  Container(
+                    key: const ValueKey('attendance_tab'),
+                    child: _attendanceTabContent,
+                  ),
+                  Container(
+                    key: const ValueKey('medical_tab'),
+                    child: _medicalCertificatesTabContent,
+                  ),
                 ],
               ),
             ),
@@ -1332,23 +1485,31 @@ class _ChildProfilePageState extends State<ChildProfilePage>
       'Пятница',
     ];
 
+    // Инициализируем _menuTabController только если он не был инициализирован или был уничтожен
+    if (_menuTabController == null || !_menuTabController!.hasListeners) {
+      _menuTabController = TabController(
+        length: daysOfWeek.length,
+        vsync: this,
+      );
+      print('Создан новый _menuTabController с ${daysOfWeek.length} вкладками');
+    }
+
     return AdaptiveLayout(
       // Мобильный вид - табы по дням недели
-      mobile: DefaultTabController(
-        length: daysOfWeek.length,
-        child: Column(
-          children: [
-            TabBar(
-              isScrollable: true,
-              tabs: daysOfWeek.map((day) => Tab(text: day)).toList(),
+      mobile: Column(
+        children: [
+          TabBar(
+            controller: _menuTabController,
+            isScrollable: true,
+            tabs: daysOfWeek.map((day) => Tab(text: day)).toList(),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _menuTabController,
+              children: daysOfWeek.map((day) => _buildDayMenu(day)).toList(),
             ),
-            Expanded(
-              child: TabBarView(
-                children: daysOfWeek.map((day) => _buildDayMenu(day)).toList(),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
 
       // Планшетный и десктопный вид - развернутое меню на неделю
@@ -1679,6 +1840,417 @@ class _ChildProfilePageState extends State<ChildProfilePage>
                         ),
                       )
                       .toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAttendanceTab() {
+    print('Построение вкладки Посещаемость (восстановленный вариант)');
+
+    return Container(
+      key: const ValueKey('attendance_container'),
+      color: Colors.white,
+      child: ListView(
+        key: const ValueKey('attendance_list'),
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12.0),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  'Посещаемость - Апрель 2025',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios, size: 16),
+                      onPressed: () {},
+                      color: AppColors.primary,
+                    ),
+                    Text(
+                      'АПРЕЛЬ',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onPressed: () {},
+                      color: AppColors.primary,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Данные о посещаемости - используем простую структуру
+          _buildAttendanceItem('1 апреля', 'с 08:45 до 17:45', true, null),
+          _buildAttendanceItem('2 апреля', 'Отсутствовал', false, 'БП'),
+          _buildAttendanceItem(
+            '3 апреля',
+            'Отсутствовал по болезни',
+            false,
+            'Б',
+          ),
+          _buildAttendanceItem('4 апреля', 'с 09:00 до 17:30', true, null),
+          _buildAttendanceItem('5 апреля', 'с 08:30 до 18:00', true, null),
+
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12.0),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: const Text(
+              'Посещаемость за апрель: 80%',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAttendanceItem(
+    String date,
+    String description,
+    bool present,
+    String? reasonCode,
+  ) {
+    return Container(
+      key: ValueKey('attendance_item_$date'),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color:
+                  present
+                      ? Colors.green.withOpacity(0.2)
+                      : Colors.red.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              present ? Icons.check : Icons.close,
+              color: present ? Colors.green : Colors.red,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  date,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  description,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+          if (reasonCode != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color:
+                    reasonCode == 'БП'
+                        ? Colors.orange.withOpacity(0.2)
+                        : Colors.red.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                reasonCode,
+                style: TextStyle(
+                  color:
+                      reasonCode == 'БП'
+                          ? Colors.orange.shade800
+                          : Colors.red.shade800,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMedicalCertificatesTab() {
+    print('Построение вкладки Справки (базовый стабильный вариант)');
+
+    return Container(
+      color: Colors.white,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // Заголовок
+          Center(
+            child: Text(
+              'Медицинские справки',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Информационное сообщение
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.blue.shade700),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Здесь отображаются все медицинские справки ребенка. Вы можете добавить новую справку, нажав на кнопку ниже.',
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Кнопка добавления
+          Container(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {},
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Добавить справку'),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Справка 1
+          _buildMedicalCertificateCard(
+            'Справка №1',
+            '20.04.2025',
+            '17-19.04.25',
+            'ЖануяМед',
+            'ОРВИ',
+          ),
+
+          const SizedBox(height: 16),
+
+          // Справка 2
+          _buildMedicalCertificateCard(
+            'Справка №2',
+            '10.04.2025',
+            '07-11.04.25',
+            'ЖануяМед',
+            'Ангина',
+          ),
+
+          const SizedBox(height: 16),
+
+          // Справка 3
+          _buildMedicalCertificateCard(
+            'Справка №3',
+            '03.04.2025',
+            '30.03-02.04.25',
+            'ЖануяМед',
+            'Простуда',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMedicalCertificateCard(
+    String title,
+    String date,
+    String period,
+    String institution,
+    String diagnosis,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Шапка справки
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.medical_services, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    'Активна',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Тело справки
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildCertificateInfoRow('Дата подачи:', date),
+                const SizedBox(height: 4),
+                _buildCertificateInfoRow('Период:', period),
+                const SizedBox(height: 4),
+                _buildCertificateInfoRow('Медучреждение:', institution),
+                const SizedBox(height: 4),
+                _buildCertificateInfoRow('Диагноз:', diagnosis, isBold: true),
+
+                const SizedBox(height: 16),
+
+                // Кнопки действий
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    // Используем SizedBox с фиксированной шириной, чтобы избежать ошибок с шириной
+                    SizedBox(
+                      width: 100,
+                      child: TextButton(
+                        onPressed: () {},
+                        child: const Text('Просмотр'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 120,
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Скачать'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCertificateInfoRow(
+    String label,
+    String value, {
+    bool isBold = false,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 120,
+          child: Text(label, style: TextStyle(color: Colors.grey.shade700)),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         ),
