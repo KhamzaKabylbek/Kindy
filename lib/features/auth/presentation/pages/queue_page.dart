@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:kindy/core/constants/app_colors.dart';
 import 'package:kindy/core/constants/app_dimensions.dart';
 import 'package:kindy/core/constants/app_text_styles.dart';
+import 'package:kindy/features/auth/domain/controllers/auth_controller.dart';
 
 enum ApplicationStatus {
   acceptedToCompetition('Принят на конкурс', AppColors.primary),
@@ -49,6 +51,27 @@ class _QueuePageState extends State<QueuePage> {
     'Старшая группа (4-5 года)',
     'Подготовительная группа (5-6 лет)',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Проверяем авторизацию пользователя
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authController = Provider.of<AuthController>(
+        context,
+        listen: false,
+      );
+      if (authController.state != AuthState.authenticated) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Необходимо войти в систему'),
+            backgroundColor: AppColors.warning,
+          ),
+        );
+        context.go('/login');
+      }
+    });
+  }
 
   @override
   void dispose() {

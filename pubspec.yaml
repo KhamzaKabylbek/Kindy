@@ -19,6 +19,14 @@ dependencies:
   intl: ^0.19.0
   provider: ^6.1.2
   
+  # State Management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+  
+  # Code Generation
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.8.1
+  
   # Адаптивность и отзывчивый дизайн
   flutter_screenutil: ^5.9.0   # Адаптивные размеры
   device_preview: ^1.1.0       # Предпросмотр на разных устройствах
@@ -38,12 +46,19 @@ dependencies:
   flutter_platform_widgets: ^6.1.0     # Платформо-зависимые виджеты
   visibility_detector: ^0.4.0+2        # Определение видимости виджетов
   auto_size_text: ^3.0.0               # Автоматическое изменение размера текста
+  image_picker: ^1.0.7
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
   device_frame: ^1.1.0        # Фреймы для разных устройств
+  
+  # Code Generation
+  build_runner: ^2.4.8
+  freezed: ^2.4.7
+  json_serializable: ^6.7.1
+  riverpod_generator: ^2.3.11
 
 flutter:
   uses-material-design: true

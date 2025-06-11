@@ -5,6 +5,8 @@ import 'package:kindy/core/constants/app_dimensions.dart';
 import 'package:kindy/core/constants/app_text_styles.dart';
 import 'package:kindy/core/utils/screen_util.dart';
 import 'package:kindy/shared/widgets/adaptive_widgets.dart';
+import 'package:provider/provider.dart';
+import 'package:kindy/features/auth/domain/controllers/auth_controller.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -14,6 +16,7 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedIndex = 0;
   int _activeChildIndex = 0;
 
@@ -22,6 +25,33 @@ class _DashboardPageState extends State<DashboardPage> {
     {'name': 'Айнура', 'age': 4, 'group': 'Средняя группа'},
     {'name': 'Ерасыл', 'age': 3, 'group': 'Младшая группа'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    print('DashboardPage: initState вызван');
+
+    // Отложим проверку пользователя до построения виджета
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkUserRole();
+    });
+  }
+
+  void _checkUserRole() {
+    // Проверяем текущего пользователя и его роль
+    final authController = Provider.of<AuthController>(context, listen: false);
+    print(
+      'DashboardPage: Роль пользователя: ${authController.userDetails?.role}',
+    );
+    print(
+      'DashboardPage: Данные пользователя: ${authController.userDetails?.toJson()}',
+    );
+
+    // Если роль - учитель, но мы попали на dashboard родителя
+    if (authController.userDetails?.role == 'TEACHER') {
+      print('DashboardPage: ВНИМАНИЕ! Учитель оказался на странице родителя!');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -198,17 +228,8 @@ class _DashboardPageState extends State<DashboardPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(),
-            _buildWelcomeSection(),
             const SizedBox(height: AppDimensions.spacingMedium),
-            _buildChildrenSelector(),
-            const SizedBox(height: AppDimensions.spacingMedium),
-            _buildNotifications(),
-            const SizedBox(height: AppDimensions.spacingLarge),
-            _buildQuickActions(),
-            const SizedBox(height: AppDimensions.spacingLarge),
             _buildNewsSection(),
-            const SizedBox(height: AppDimensions.spacingLarge),
-            _buildUpcomingEvents(),
             const SizedBox(height: AppDimensions.spacingLarge),
           ],
         ),
@@ -261,7 +282,8 @@ class _DashboardPageState extends State<DashboardPage> {
             icon: const Icon(Icons.notifications_outlined),
             color: AppColors.primary,
             onPressed: () {
-              // TODO: Navigate to notifications
+              // Показываем диалог с уведомлениями
+              _showNotificationsDialog(context);
             },
           ),
         ],
@@ -269,203 +291,112 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildWelcomeSection() {
-    return Container(
-      margin: const EdgeInsets.all(AppDimensions.padding16),
-      padding: const EdgeInsets.all(AppDimensions.padding16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary.withOpacity(0.8), AppColors.primary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppDimensions.radius16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowColor,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: Colors.white.withOpacity(0.2),
-                child: const Icon(Icons.person, size: 40, color: Colors.white),
-              ),
-              const SizedBox(width: AppDimensions.spacingMedium),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Добрый день,', style: AppTextStyles.body1Light),
-                  Text(
-                    'Хамза Кабылбек',
-                    style: AppTextStyles.h3.copyWith(color: Colors.white),
+  // Новый метод для отображения диалога с уведомлениями
+  void _showNotificationsDialog(BuildContext context) {
+    final double padding = AppDimensions.getAdaptivePadding(
+      AppDimensions.padding16,
+    );
+    final double borderRadius = AppDimensions.getAdaptiveRadius(
+      AppDimensions.radius12,
+    );
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(borderRadius),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(padding),
+                  child: Row(
+                    children: [
+                      Icon(Icons.notifications, color: AppColors.primary),
+                      SizedBox(width: 10),
+                      AdaptiveText('Уведомления', style: AppTextStyles.h3),
+                      Spacer(),
+                      IconButton(
+                        icon: Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                        padding: EdgeInsets.zero,
+                        constraints: BoxConstraints(),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChildrenSelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.padding16,
-          ),
-          child: Text('Мои дети', style: AppTextStyles.h3),
-        ),
-        const SizedBox(height: AppDimensions.spacingSmall),
-        SizedBox(
-          height: 110,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.padding16,
-            ),
-            itemCount: _children.length,
-            itemBuilder: (context, index) {
-              final child = _children[index];
-              final bool isActive = index == _activeChildIndex;
-
-              return _buildChildCard(
-                name: child['name'] as String,
-                age: child['age'] as int,
-                group: child['group'] as String,
-                isActive: isActive,
-                onTap: () {
-                  setState(() {
-                    _activeChildIndex = index;
-                  });
-                },
-                onLongPress: () {
-                  context.push('/child-profile', extra: _children[index]);
-                },
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildChildCard({
-    required String name,
-    required int age,
-    required String group,
-    required bool isActive,
-    required VoidCallback onTap,
-    VoidCallback? onLongPress,
-  }) {
-    // Адаптивная ширина карточки ребенка
-    final double cardWidth = ScreenUtil.adaptiveValue(
-      mobile: 100.0,
-      tablet: 120.0,
-      desktop: 150.0,
-    );
-
-    // Адаптивный радиус аватара
-    final double avatarRadius = ScreenUtil.adaptiveValue(
-      mobile: 25.0,
-      tablet: 30.0,
-      desktop: 35.0,
-    );
-
-    // Адаптивный размер текста имени
-    final double nameTextSize = ScreenUtil.adaptiveValue(
-      mobile: 14.0,
-      tablet: 16.0,
-      desktop: 18.0,
-    );
-
-    // Адаптивный отступ между элементами
-    final double spacing = AppDimensions.getAdaptivePadding(
-      AppDimensions.spacingSmall,
-    );
-
-    return GestureDetector(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      child: Container(
-        width: cardWidth,
-        margin: EdgeInsets.only(
-          right: AppDimensions.getAdaptivePadding(AppDimensions.spacingMedium),
-        ),
-        decoration: BoxDecoration(
-          color:
-              isActive
-                  ? AppColors.primary.withOpacity(0.1)
-                  : AppColors.backgroundPrimary,
-          borderRadius: BorderRadius.circular(
-            AppDimensions.getAdaptiveRadius(AppDimensions.radius12),
-          ),
-          border:
-              isActive ? Border.all(color: AppColors.primary, width: 2) : null,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.shadowColor,
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: avatarRadius,
-              backgroundColor: AppColors.primary.withOpacity(0.2),
-              child: Text(
-                name.substring(0, 1),
-                style: TextStyle(
-                  fontSize: nameTextSize,
-                  fontWeight: FontWeight.bold,
-                  color: isActive ? AppColors.primary : Colors.grey.shade600,
                 ),
-              ),
+                Divider(height: 1),
+                // Уведомление о родительском собрании
+                InkWell(
+                  onTap: () {
+                    // Действие при нажатии на уведомление
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(padding),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade100,
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Colors.orange,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.notifications,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AdaptiveText(
+                                'Родительское собрание',
+                                style: AppTextStyles.body1.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              AdaptiveText(
+                                'Завтра, 18:00, актовый зал',
+                                style: AppTextStyles.body2,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios, size: 16),
+                      ],
+                    ),
+                  ),
+                ),
+                // Дополнительные уведомления можно добавить здесь
+                Padding(
+                  padding: EdgeInsets.all(padding),
+                  child: TextButton(
+                    onPressed: () {
+                      // Переход ко всем уведомлениям
+                      Navigator.pop(context);
+                    },
+                    child: Text('Показать все уведомления'),
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: spacing),
-            Text(
-              name,
-              style: AppTextStyles.body3.copyWith(
-                fontWeight: FontWeight.bold,
-                color: isActive ? AppColors.primary : AppColors.textPrimary,
-                fontSize: nameTextSize - 4,
-              ),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              '$age ${_getAgeText(age)}',
-              style: AppTextStyles.body3.copyWith(
-                color: Colors.grey.shade600,
-                fontSize: nameTextSize - 6,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            Text(
-              group,
-              style: AppTextStyles.body3.copyWith(
-                color: Colors.grey.shade600,
-                fontSize: nameTextSize - 8,
-              ),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -481,339 +412,6 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  Widget _buildNotifications() {
-    final currentChild = _children[_activeChildIndex];
-    final childName = currentChild['name'];
-    final childGroup = currentChild['group'];
-
-    final double horizontalMargin = AppDimensions.getAdaptivePadding(
-      AppDimensions.padding16,
-    );
-    final double padding = AppDimensions.getAdaptivePadding(
-      AppDimensions.padding16,
-    );
-    final double borderRadius = AppDimensions.getAdaptiveRadius(
-      AppDimensions.radius12,
-    );
-    final double iconSize = AppDimensions.getAdaptiveIconSize(24.0);
-
-    return AdaptiveLayout(
-      mobile: Container(
-        margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
-        padding: EdgeInsets.all(padding),
-        decoration: BoxDecoration(
-          color: Colors.orange.shade100,
-          borderRadius: BorderRadius.circular(borderRadius),
-          border: Border.all(color: Colors.orange.shade300, width: 1),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(AppDimensions.getAdaptivePadding(8)),
-              decoration: const BoxDecoration(
-                color: Colors.orange,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.notifications,
-                color: Colors.white,
-                size: iconSize,
-              ),
-            ),
-            SizedBox(
-              width: AppDimensions.getAdaptivePadding(
-                AppDimensions.spacingMedium,
-              ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AdaptiveText(
-                    'Родительское собрание ($childGroup)',
-                    style: AppTextStyles.body1.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  AdaptiveText(
-                    'Завтра, 18:00, актовый зал',
-                    style: AppTextStyles.body2,
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              icon: Icon(Icons.arrow_forward_ios, size: iconSize * 0.7),
-              onPressed: () {
-                // Navigate to notification details
-              },
-            ),
-          ],
-        ),
-      ),
-
-      // Вариант для планшетов и десктопов
-      tablet: Container(
-        margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
-        padding: EdgeInsets.all(padding),
-        decoration: BoxDecoration(
-          color: Colors.orange.shade100,
-          borderRadius: BorderRadius.circular(borderRadius),
-          border: Border.all(color: Colors.orange.shade300, width: 1),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(AppDimensions.getAdaptivePadding(12)),
-              decoration: const BoxDecoration(
-                color: Colors.orange,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.notifications,
-                color: Colors.white,
-                size: iconSize,
-              ),
-            ),
-            SizedBox(
-              width: AppDimensions.getAdaptivePadding(
-                AppDimensions.spacingMedium,
-              ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      AdaptiveText(
-                        'Родительское собрание ($childGroup)',
-                        style: AppTextStyles.h3,
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade300,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Text(
-                          'Важно',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  AdaptiveText(
-                    'Приглашаем вас на родительское собрание, которое состоится завтра в 18:00 в актовом зале детского сада. На собрании будут обсуждаться важные вопросы, касающиеся учебной программы и предстоящих мероприятий.',
-                    style: AppTextStyles.body2,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.event, size: 16, color: Colors.orange),
-                      const SizedBox(width: 4),
-                      AdaptiveText(
-                        'Завтра, 18:00',
-                        style: AppTextStyles.body3.copyWith(
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      const Icon(
-                        Icons.location_on,
-                        size: 16,
-                        color: Colors.orange,
-                      ),
-                      const SizedBox(width: 4),
-                      AdaptiveText(
-                        'Актовый зал',
-                        style: AppTextStyles.body3.copyWith(
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                // Navigate to notification details
-              },
-              child: const Text('Подробнее'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActions() {
-    final currentChild = _children[_activeChildIndex];
-    final childName = currentChild['name'];
-    final double horizontalPadding = AppDimensions.getAdaptivePadding(
-      AppDimensions.padding16,
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-          child: AdaptiveText(
-            'Действия для ${childName}',
-            style: AppTextStyles.h3,
-          ),
-        ),
-        SizedBox(
-          height: AppDimensions.getAdaptivePadding(AppDimensions.spacingMedium),
-        ),
-
-        // Адаптивный грид для разных размеров экранов
-        ScreenUtil.isSmallScreen()
-            // Для мобильного - горизонтальный список
-            ? SizedBox(
-              height: ScreenUtil.adaptiveValue(
-                mobile: 120.0,
-                tablet: 150.0,
-                desktop: 180.0,
-              ),
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                children: [
-                  _buildActionCard('Встать в очередь', Icons.queue, () {
-                    context.go('/queue');
-                  }),
-                  _buildActionCard('Меню питания', Icons.restaurant_menu, () {
-                    // Navigate to menu
-                  }),
-                  _buildActionCard('Расписание', Icons.calendar_today, () {
-                    // Navigate to schedule
-                  }),
-                  _buildActionCard('Загрузить фото', Icons.photo_camera, () {
-                    // Navigate to photo upload
-                  }),
-                ],
-              ),
-            )
-            // Для планшетов и десктопов - адаптивный грид
-            : Padding(
-              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-              child: Wrap(
-                spacing: AppDimensions.getAdaptivePadding(
-                  AppDimensions.spacingMedium,
-                ),
-                runSpacing: AppDimensions.getAdaptivePadding(
-                  AppDimensions.spacingMedium,
-                ),
-                children: [
-                  _buildActionCard('Встать в очередь', Icons.queue, () {
-                    context.go('/queue');
-                  }),
-                  _buildActionCard('Меню питания', Icons.restaurant_menu, () {
-                    // Navigate to menu
-                  }),
-                  _buildActionCard('Расписание', Icons.calendar_today, () {
-                    // Navigate to schedule
-                  }),
-                  _buildActionCard('Загрузить фото', Icons.photo_camera, () {
-                    // Navigate to photo upload
-                  }),
-                  // Дополнительные действия для больших экранов
-                  _buildActionCard('Оплата', Icons.payment, () {
-                    // Navigate to payment
-                  }),
-                  _buildActionCard('Сообщения', Icons.message, () {
-                    // Navigate to messages
-                  }),
-                ],
-              ),
-            ),
-      ],
-    );
-  }
-
-  Widget _buildActionCard(String title, IconData icon, VoidCallback onTap) {
-    // Адаптивные размеры карточки
-    final cardWidth = ScreenUtil.adaptiveValue(
-      mobile: 100.0,
-      tablet: 150.0,
-      desktop: 200.0,
-    );
-
-    final iconSize = AppDimensions.getAdaptiveIconSize(30);
-    final borderRadius = AppDimensions.getAdaptiveRadius(
-      AppDimensions.radius12,
-    );
-    final padding = AppDimensions.getAdaptivePadding(AppDimensions.padding12);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: cardWidth,
-        margin: EdgeInsets.only(
-          right:
-              ScreenUtil.isSmallScreen()
-                  ? AppDimensions.getAdaptivePadding(
-                    AppDimensions.spacingMedium,
-                  )
-                  : 0,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.backgroundPrimary,
-          borderRadius: BorderRadius.circular(borderRadius),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.shadowColor,
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: EdgeInsets.all(padding),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: AppColors.primary, size: iconSize),
-            ),
-            SizedBox(
-              height: AppDimensions.getAdaptivePadding(
-                AppDimensions.spacingSmall,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: AdaptiveText(
-                title,
-                style: AppTextStyles.body3.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildNewsSection() {
     final double horizontalPadding = AppDimensions.getAdaptivePadding(
       AppDimensions.padding16,
@@ -822,6 +420,46 @@ class _DashboardPageState extends State<DashboardPage> {
       AppDimensions.spacingMedium,
     );
 
+    // Пример данных новостей
+    final List<Map<String, dynamic>> newsItems = [
+      {
+        'id': '1',
+        'authorName': 'Ясли-сад "Лаяна"',
+        'avatarUrl': '', // Пустая строка, будем использовать первую букву
+        'timestamp': 'сегодня в 10:25',
+        'content':
+            'Рады сообщить: в нашем садике открывается шахматный кружок для детей старших групп! 🎉\nШахматы помогают развивать внимание, мышление и усидчивость — и всё это в игровой форме.',
+        'imageUrl': 'assets/images/Image3.png',
+        'likes': 26,
+        'comments': 11,
+        'hasLiked': false,
+      },
+      {
+        'id': '2',
+        'authorName': 'Детский сад "Балдаурен"',
+        'avatarUrl': '',
+        'timestamp': 'вчера в 15:40',
+        'content':
+            'Сегодня в нашем саду прошел день открытых дверей! Благодарим всех родителей, которые смогли присутствовать и познакомиться с нашими воспитателями и программой обучения.',
+        'imageUrl': 'assets/images/news_open_day.jpg',
+        'likes': 42,
+        'comments': 8,
+        'hasLiked': true,
+      },
+      {
+        'id': '3',
+        'authorName': 'Детский сад "Балдаурен"',
+        'avatarUrl': '',
+        'timestamp': '3 дня назад',
+        'content':
+            'Приглашаем всех детей и родителей на утренник "Осенний бал", который состоится 20 сентября в 10:00. Будет много интересных конкурсов, песен и танцев!',
+        'imageUrl': 'assets/images/news_autumn.jpg',
+        'likes': 38,
+        'comments': 15,
+        'hasLiked': false,
+      },
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -829,449 +467,650 @@ class _DashboardPageState extends State<DashboardPage> {
           padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              AdaptiveText('Новости', style: AppTextStyles.h3),
-              TextButton(
-                onPressed: () {
-                  // Navigate to all news
-                },
-                child: AdaptiveText(
-                  'Все',
-                  style: AppTextStyles.body3.copyWith(color: AppColors.primary),
-                ),
-              ),
-            ],
+            children: [AdaptiveText('Новости', style: AppTextStyles.h3)],
           ),
         ),
         SizedBox(height: spacingMedium),
 
-        // Адаптивный вид для разных размеров экранов
-        ScreenUtil.isSmallScreen()
-            // Горизонтальный список для мобильных устройств
-            ? SizedBox(
-              height: ScreenUtil.adaptiveValue(
-                mobile: 200.0,
-                tablet: 250.0,
-                desktop: 300.0,
-              ),
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                children: [
-                  _buildNewsCard(
-                    'День открытых дверей',
-                    'Приглашаем родителей на день открытых дверей в нашем детском саду',
-                    'assets/images/news1.jpg',
-                  ),
-                  _buildNewsCard(
-                    'Обновление меню',
-                    'С 1 сентября в нашем саду обновляется меню питания детей',
-                    'assets/images/news2.jpg',
-                  ),
-                  _buildNewsCard(
-                    'Новые кружки',
-                    'Запись на новые кружки по робототехнике и английскому языку',
-                    'assets/images/news3.jpg',
-                  ),
-                ],
-              ),
-            )
-            // Грид для планшетов и десктопов
-            : Padding(
-              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-              child: GridView.count(
-                crossAxisCount: ScreenUtil.isMediumScreen() ? 2 : 3,
-                childAspectRatio: 1.5,
-                crossAxisSpacing: spacingMedium,
-                mainAxisSpacing: spacingMedium,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildNewsCard(
-                    'День открытых дверей',
-                    'Приглашаем родителей на день открытых дверей в нашем детском саду',
-                    'assets/images/news1.jpg',
-                  ),
-                  _buildNewsCard(
-                    'Обновление меню',
-                    'С 1 сентября в нашем саду обновляется меню питания детей',
-                    'assets/images/news2.jpg',
-                  ),
-                  _buildNewsCard(
-                    'Новые кружки',
-                    'Запись на новые кружки по робототехнике и английскому языку',
-                    'assets/images/news3.jpg',
-                  ),
-                  _buildNewsCard(
-                    'Выставка детских работ',
-                    'Приглашаем посетить выставку творческих работ наших воспитанников',
-                    'assets/images/news4.jpg',
-                  ),
-                ],
-              ),
-            ),
+        // Список новостей в стиле Instagram
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: newsItems.length,
+          itemBuilder: (context, index) {
+            final newsItem = newsItems[index];
+            return _buildNewsItem(
+              authorName: newsItem['authorName'],
+              avatarUrl: newsItem['avatarUrl'],
+              timestamp: newsItem['timestamp'],
+              content: newsItem['content'],
+              imageUrl: newsItem['imageUrl'],
+              likes: newsItem['likes'],
+              comments: newsItem['comments'],
+              hasLiked: newsItem['hasLiked'],
+              onLikePressed: () {
+                // Обработка лайка
+                setState(() {
+                  final item = newsItems.firstWhere(
+                    (item) => item['id'] == newsItem['id'],
+                  );
+                  item['hasLiked'] = !item['hasLiked'];
+                  item['likes'] =
+                      item['hasLiked'] ? item['likes'] + 1 : item['likes'] - 1;
+                });
+              },
+              onCommentPressed: () {
+                // Открыть комментарии
+                _showCommentsDialog(context, newsItem);
+              },
+            );
+          },
+        ),
       ],
     );
   }
 
-  Widget _buildNewsCard(String title, String description, String imagePath) {
-    final double borderRadius = AppDimensions.getAdaptiveRadius(
-      AppDimensions.radius12,
-    );
+  // Виджет отдельного элемента новости
+  Widget _buildNewsItem({
+    required String authorName,
+    required String avatarUrl,
+    required String timestamp,
+    required String content,
+    required String imageUrl,
+    required int likes,
+    required int comments,
+    required bool hasLiked,
+    required VoidCallback onLikePressed,
+    required VoidCallback onCommentPressed,
+  }) {
     final double padding = AppDimensions.getAdaptivePadding(
-      AppDimensions.padding12,
-    );
-
-    // Адаптивный размер карточки
-    final cardWidth =
-        ScreenUtil.isSmallScreen()
-            ? 250.0
-            : double.infinity; // На больших экранах ширина определяется сеткой
-
-    return Container(
-      width: cardWidth,
-      margin:
-          ScreenUtil.isSmallScreen()
-              ? EdgeInsets.only(
-                right: AppDimensions.getAdaptivePadding(
-                  AppDimensions.spacingMedium,
-                ),
-              )
-              : EdgeInsets.zero, // Без горизонтальных отступов для сетки
-      decoration: BoxDecoration(
-        color: AppColors.backgroundPrimary,
-        borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowColor,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 3,
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.2),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(borderRadius),
-                  topRight: Radius.circular(borderRadius),
-                ),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.photo,
-                  size: AppDimensions.getAdaptiveIconSize(50),
-                  color: AppColors.primary.withOpacity(0.5),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: EdgeInsets.all(padding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: AdaptiveText(
-                      title,
-                      style: AppTextStyles.body1.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Flexible(
-                    child: AdaptiveText(
-                      description,
-                      style: AppTextStyles.body3,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUpcomingEvents() {
-    final double horizontalPadding = AppDimensions.getAdaptivePadding(
       AppDimensions.padding16,
-    );
-    final double spacingMedium = AppDimensions.getAdaptivePadding(
-      AppDimensions.spacingMedium,
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              AdaptiveText('Ближайшие события', style: AppTextStyles.h3),
-              TextButton(
-                onPressed: () {
-                  // Navigate to all events
-                },
-                child: AdaptiveText(
-                  'Все',
-                  style: AppTextStyles.body3.copyWith(color: AppColors.primary),
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: spacingMedium),
-
-        // Адаптивный вид для разных размеров экранов
-        AdaptiveLayout(
-          // Мобильный вид - простой список
-          mobile: Padding(
-            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-            child: Column(
-              children: [
-                _buildEventItem('Родительское собрание', 'Завтра, 18:00'),
-                const Divider(),
-                _buildEventItem('Утренник "Осенний бал"', '20 сентября, 10:00'),
-                const Divider(),
-                _buildEventItem('Экскурсия в зоопарк', '25 сентября, 9:00'),
-              ],
-            ),
-          ),
-
-          // Планшетный вид - карточки в 2 колонки
-          tablet: Padding(
-            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    children: [
-                      _buildEventCard(
-                        'Родительское собрание',
-                        'Завтра, 18:00',
-                        'Обсуждение учебной программы на новый учебный год и планирование внеклассных мероприятий',
-                        Icons.groups,
-                      ),
-                      SizedBox(height: spacingMedium),
-                      _buildEventCard(
-                        'Экскурсия в зоопарк',
-                        '25 сентября, 9:00',
-                        'Познавательная экскурсия для детей старшей группы',
-                        Icons.pets,
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: spacingMedium),
-                Expanded(
-                  child: Column(
-                    children: [
-                      _buildEventCard(
-                        'Утренник "Осенний бал"',
-                        '20 сентября, 10:00',
-                        'Праздничное мероприятие с участием всех групп. Детям подготовить костюмы',
-                        Icons.celebration,
-                      ),
-                      SizedBox(height: spacingMedium),
-                      _buildEventCard(
-                        'Медицинский осмотр',
-                        '28 сентября, 9:00-12:00',
-                        'Плановый медосмотр всех групп детского сада',
-                        Icons.local_hospital,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEventItem(String title, String dateTime) {
-    final double padding8 = AppDimensions.getAdaptivePadding(
-      AppDimensions.padding8,
     );
     final double spacing = AppDimensions.getAdaptivePadding(
       AppDimensions.spacingMedium,
     );
-    final double iconSize = AppDimensions.getAdaptiveIconSize(24);
-    final double radius = AppDimensions.getAdaptiveRadius(
-      AppDimensions.radius8,
+    final double spacingSmall = AppDimensions.getAdaptivePadding(
+      AppDimensions.spacingSmall,
     );
 
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: padding8),
-      child: Row(
+    return Card(
+      margin: EdgeInsets.symmetric(horizontal: padding, vertical: spacingSmall),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 1,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(radius),
-            ),
-            child: Icon(Icons.event, color: AppColors.primary, size: iconSize),
-          ),
-          SizedBox(width: spacing),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // Шапка с автором и временем
+          Padding(
+            padding: EdgeInsets.all(padding),
+            child: Row(
               children: [
-                AdaptiveText(
-                  title,
-                  style: AppTextStyles.body1.copyWith(
-                    fontWeight: FontWeight.w500,
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.grey.shade200,
+                  child: Text(
+                    authorName.substring(0, 1),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
-                AdaptiveText(
-                  dateTime,
-                  style: AppTextStyles.body3.copyWith(color: Colors.grey),
+                SizedBox(width: spacing),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        authorName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        timestamp,
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.more_vert),
+                  onPressed: () {
+                    // Показать дополнительные опции
+                  },
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints(),
                 ),
               ],
             ),
           ),
-          IconButton(
-            icon: Icon(
-              Icons.arrow_forward_ios,
-              size: iconSize * 0.7,
-              color: Colors.grey,
+
+          // Содержимое новости
+          if (content.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: padding),
+              child: Text(
+                content,
+                style: TextStyle(fontSize: 16),
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            onPressed: () {
-              // Navigate to event details
-            },
+
+          // Кнопка "Посмотреть больше" для длинного текста
+          if (content.length > 100)
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: padding),
+              child: TextButton(
+                onPressed: () {
+                  // Показать полный текст
+                },
+                child: Text('Показать больше...'),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  alignment: Alignment.centerLeft,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ),
+
+          // Изображение
+          if (imageUrl.isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                margin: EdgeInsets.all(padding),
+                constraints: BoxConstraints(
+                  maxHeight: 200, // Ограничиваем высоту изображения
+                ),
+                width: double.infinity,
+                child: Image.asset(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 200,
+                      color: Colors.grey.shade200,
+                      child: Center(
+                        child: Icon(
+                          Icons.image_not_supported,
+                          color: Colors.grey.shade400,
+                          size: 50,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+          // Лайки и комментарии
+          Padding(
+            padding: EdgeInsets.all(padding),
+            child: Row(
+              children: [
+                Text(
+                  '$likes лайков',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(width: spacing),
+                Text(
+                  '$comments комментариев',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+
+          Divider(height: 1),
+
+          // Кнопки действий
+          Row(
+            children: [
+              Expanded(
+                child: TextButton.icon(
+                  onPressed: onLikePressed,
+                  icon: Icon(
+                    hasLiked ? Icons.favorite : Icons.favorite_border,
+                    color: hasLiked ? Colors.red : Colors.grey,
+                  ),
+                  label: Text(
+                    'Нравится',
+                    style: TextStyle(
+                      color: hasLiked ? Colors.red : Colors.grey,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(minimumSize: Size(0, 40)),
+                ),
+              ),
+              Expanded(
+                child: TextButton.icon(
+                  onPressed: onCommentPressed,
+                  icon: const Icon(
+                    Icons.chat_bubble_outline,
+                    color: Colors.grey,
+                  ),
+                  label: const Text(
+                    'Комментировать',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  style: TextButton.styleFrom(minimumSize: Size(0, 40)),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  // Новый метод для карточек событий на больших экранах
-  Widget _buildEventCard(
-    String title,
-    String dateTime,
-    String description,
-    IconData icon,
+  // Диалог для показа комментариев
+  void _showCommentsDialog(
+    BuildContext context,
+    Map<String, dynamic> newsItem,
   ) {
     final double padding = AppDimensions.getAdaptivePadding(
       AppDimensions.padding16,
     );
-    final double borderRadius = AppDimensions.getAdaptiveRadius(
-      AppDimensions.radius12,
-    );
-    final double iconSize = AppDimensions.getAdaptiveIconSize(32);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.backgroundPrimary,
-        borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowColor,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+    // Пример комментариев
+    final List<Map<String, dynamic>> commentsList = [
+      {
+        'authorName': 'Анна Смирнова',
+        'text': 'Отличная новость! Мой сын обязательно запишется.',
+        'timestamp': '1 час назад',
+      },
+      {
+        'authorName': 'Марат Асанов',
+        'text': 'А для каких групп будет доступен кружок?',
+        'timestamp': '45 минут назад',
+      },
+      {
+        'authorName': 'Администратор',
+        'text': 'Для старшей и подготовительной групп. Набор ограничен.',
+        'timestamp': '30 минут назад',
+      },
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Padding(
-        padding: EdgeInsets.all(padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+      builder:
+          (context) => Container(
+            height: MediaQuery.of(context).size.height * 0.75,
+            padding: EdgeInsets.all(padding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: EdgeInsets.all(padding * 0.7),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: AppColors.primary, size: iconSize),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(
-                  width: AppDimensions.getAdaptivePadding(
-                    AppDimensions.spacingMedium,
-                  ),
+                SizedBox(height: 16),
+                Text(
+                  'Комментарии (${newsItem['comments']})',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
+                SizedBox(height: 16),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: ListView.builder(
+                    itemCount: commentsList.length,
+                    itemBuilder: (context, index) {
+                      final comment = commentsList[index];
+                      return ListTile(
+                        leading: CircleAvatar(
+                          radius: 18,
+                          backgroundColor: Colors.grey.shade200,
+                          child: Text(
+                            comment['authorName'].substring(0, 1),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                        title: Row(
+                          children: [
+                            Text(
+                              comment['authorName'],
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              comment['timestamp'],
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                        subtitle: Text(comment['text']),
+                        dense: true,
+                      );
+                    },
+                  ),
+                ),
+                Divider(),
+                Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom,
+                  ),
+                  child: Row(
                     children: [
-                      Flexible(
-                        child: AdaptiveText(
-                          title,
-                          style: AppTextStyles.h3,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: Colors.grey.shade200,
+                        child: Text(
+                          'A',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
-                      Flexible(
-                        child: AdaptiveText(
-                          dateTime,
-                          style: AppTextStyles.body2.copyWith(
-                            color: Colors.grey,
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: 'Напишите комментарий...',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade100,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
+                      ),
+                      SizedBox(width: 8),
+                      IconButton(
+                        icon: Icon(Icons.send, color: AppColors.primary),
+                        onPressed: () {
+                          // Отправить комментарий
+                          Navigator.pop(context);
+                        },
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            SizedBox(
-              height: AppDimensions.getAdaptivePadding(
-                AppDimensions.spacingMedium,
-              ),
+          ),
+    );
+  }
+
+  Widget _buildServicesTab() {
+    final double padding = AppDimensions.getAdaptivePadding(
+      AppDimensions.padding16,
+    );
+    final double spacing = AppDimensions.getAdaptivePadding(
+      AppDimensions.spacingMedium,
+    );
+    final double spacingLarge = AppDimensions.getAdaptivePadding(
+      AppDimensions.spacingLarge,
+    );
+    final double borderRadius = AppDimensions.getAdaptiveRadius(
+      AppDimensions.radius12,
+    );
+
+    // Список сервисов (удалены пункты "Чат" и "Фотогалерея")
+    final List<Map<String, dynamic>> services = [
+      {
+        'title': 'Встать в очередь',
+        'icon': Icons.queue,
+        'description':
+            'Встать в электронную очередь для приёма или выдачи ребёнка',
+      },
+      {
+        'title': 'Меню питания',
+        'icon': Icons.restaurant_menu,
+        'description': 'Просмотр ежедневного меню и рациона питания',
+      },
+      {
+        'title': 'Расписание',
+        'icon': Icons.calendar_today,
+        'description': 'Расписание занятий и мероприятий',
+      },
+      {
+        'title': 'Загрузить фото',
+        'icon': Icons.photo_camera,
+        'description': 'Загрузка фотографий с мероприятий',
+      },
+      {
+        'title': 'Оплата услуг',
+        'icon': Icons.payment,
+        'description': 'Оплата детского сада и дополнительных занятий',
+      },
+      {
+        'title': 'Медицинская карта',
+        'icon': Icons.healing,
+        'description': 'Доступ к медицинской информации и прививкам',
+      },
+      {
+        'title': 'Онлайн-камеры',
+        'icon': Icons.videocam,
+        'description': 'Просмотр видеотрансляции из группы',
+      },
+      {
+        'title': 'Электронные справки',
+        'icon': Icons.description,
+        'description': 'Заказ и получение справок онлайн',
+      },
+    ];
+
+    return AdaptiveLayout(
+      // Мобильный вид - вертикальный список
+      mobile: SingleChildScrollView(
+        padding: EdgeInsets.all(padding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AdaptiveText('Сервисы', style: AppTextStyles.h2),
+            SizedBox(height: spacing),
+            const AdaptiveText(
+              'Электронные сервисы для родителей и детей',
+              style: TextStyle(color: Colors.grey),
             ),
-            Flexible(
-              child: AdaptiveText(
-                description,
-                style: AppTextStyles.body2,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            SizedBox(
-              height: AppDimensions.getAdaptivePadding(
-                AppDimensions.spacingMedium,
-              ),
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Navigate to event details
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                child: const Text('Подробнее'),
-              ),
+            SizedBox(height: spacingLarge),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: services.length,
+              separatorBuilder: (context, index) => SizedBox(height: spacing),
+              itemBuilder: (context, index) {
+                final service = services[index];
+                return _buildServiceCard(
+                  title: service['title'],
+                  icon: service['icon'],
+                  description: service['description'],
+                );
+              },
             ),
           ],
+        ),
+      ),
+
+      // Планшетный и десктопный вид - карточки в сетке
+      tablet: SingleChildScrollView(
+        padding: EdgeInsets.all(padding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AdaptiveText('Сервисы', style: AppTextStyles.h2),
+            SizedBox(height: spacing),
+            const AdaptiveText(
+              'Электронные сервисы для родителей и детей',
+              style: TextStyle(color: Colors.grey),
+            ),
+            SizedBox(height: spacingLarge),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: ScreenUtil.isLargeScreen() ? 3 : 2,
+                childAspectRatio: 1.3,
+                crossAxisSpacing: spacing,
+                mainAxisSpacing: spacing,
+              ),
+              itemCount: services.length,
+              itemBuilder: (context, index) {
+                final service = services[index];
+                return _buildServiceCard(
+                  title: service['title'],
+                  icon: service['icon'],
+                  description: service['description'],
+                  isGrid: true,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildServiceCard({
+    required String title,
+    required IconData icon,
+    required String description,
+    bool isGrid = false,
+  }) {
+    final double borderRadius = AppDimensions.getAdaptiveRadius(
+      AppDimensions.radius12,
+    );
+    final double padding = AppDimensions.getAdaptivePadding(
+      AppDimensions.padding16,
+    );
+    final double spacing = AppDimensions.getAdaptivePadding(
+      AppDimensions.spacingMedium,
+    );
+    final double iconSize = AppDimensions.getAdaptiveIconSize(30);
+
+    void navigateToService() {
+      if (title == 'Встать в очередь') {
+        Navigator.of(context).pushNamed('/queue-status');
+      } else {
+        // Для других сервисов можно добавить свою логику навигации
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Сервис "$title" будет доступен в ближайшее время'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
+      elevation: 2,
+      child: InkWell(
+        onTap: navigateToService,
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: Padding(
+          padding: EdgeInsets.all(padding),
+          child:
+              isGrid
+                  // Вид для сетки (планшет/десктоп)
+                  ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(padding * 0.7),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          icon,
+                          color: AppColors.primary,
+                          size: iconSize,
+                        ),
+                      ),
+                      SizedBox(height: padding * 0.5),
+                      AdaptiveText(
+                        title,
+                        style: AppTextStyles.h3,
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: padding * 0.3),
+                      AdaptiveText(
+                        description,
+                        style: AppTextStyles.body2.copyWith(color: Colors.grey),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  )
+                  // Вид для списка (мобильный)
+                  : Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(padding * 0.7),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          icon,
+                          color: AppColors.primary,
+                          size: iconSize,
+                        ),
+                      ),
+                      SizedBox(width: spacing),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AdaptiveText(title, style: AppTextStyles.h3),
+                            SizedBox(height: padding * 0.3),
+                            AdaptiveText(
+                              description,
+                              style: AppTextStyles.body2.copyWith(
+                                color: Colors.grey,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.grey.shade400,
+                        size: 16,
+                      ),
+                    ],
+                  ),
         ),
       ),
     );
@@ -1319,7 +1158,9 @@ class _DashboardPageState extends State<DashboardPage> {
                       _activeChildIndex = index;
                     });
 
-                    context.push('/child-profile', extra: _children[index]);
+                    Navigator.of(
+                      context,
+                    ).pushNamed('/child-profile', arguments: _children[index]);
                   },
                 );
               },
@@ -1363,7 +1204,9 @@ class _DashboardPageState extends State<DashboardPage> {
                       _activeChildIndex = index;
                     });
 
-                    context.push('/child-profile', extra: _children[index]);
+                    Navigator.of(
+                      context,
+                    ).pushNamed('/child-profile', arguments: _children[index]);
                   },
                 );
               },
@@ -1597,217 +1440,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildServicesTab() {
-    final double padding = AppDimensions.getAdaptivePadding(
-      AppDimensions.padding16,
-    );
-    final double spacing = AppDimensions.getAdaptivePadding(
-      AppDimensions.spacingMedium,
-    );
-    final double spacingLarge = AppDimensions.getAdaptivePadding(
-      AppDimensions.spacingLarge,
-    );
-    final double borderRadius = AppDimensions.getAdaptiveRadius(
-      AppDimensions.radius12,
-    );
-
-    // Список сервисов (удалены пункты "Чат" и "Фотогалерея")
-    final List<Map<String, dynamic>> services = [
-      {
-        'title': 'Оплата услуг',
-        'icon': Icons.payment,
-        'description': 'Оплата детского сада и дополнительных занятий',
-      },
-      {
-        'title': 'Медицинская карта',
-        'icon': Icons.healing,
-        'description': 'Доступ к медицинской информации и прививкам',
-      },
-      {
-        'title': 'Онлайн-камеры',
-        'icon': Icons.videocam,
-        'description': 'Просмотр видеотрансляции из группы',
-      },
-      {
-        'title': 'Электронные справки',
-        'icon': Icons.description,
-        'description': 'Заказ и получение справок онлайн',
-      },
-    ];
-
-    return AdaptiveLayout(
-      // Мобильный вид - вертикальный список
-      mobile: SingleChildScrollView(
-        padding: EdgeInsets.all(padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AdaptiveText('Сервисы', style: AppTextStyles.h2),
-            SizedBox(height: spacing),
-            const AdaptiveText(
-              'Электронные сервисы для родителей и детей',
-              style: TextStyle(color: Colors.grey),
-            ),
-            SizedBox(height: spacingLarge),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: services.length,
-              separatorBuilder: (context, index) => SizedBox(height: spacing),
-              itemBuilder: (context, index) {
-                final service = services[index];
-                return _buildServiceCard(
-                  title: service['title'],
-                  icon: service['icon'],
-                  description: service['description'],
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-
-      // Планшетный и десктопный вид - карточки в сетке
-      tablet: SingleChildScrollView(
-        padding: EdgeInsets.all(padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AdaptiveText('Сервисы', style: AppTextStyles.h2),
-            SizedBox(height: spacing),
-            const AdaptiveText(
-              'Электронные сервисы для родителей и детей',
-              style: TextStyle(color: Colors.grey),
-            ),
-            SizedBox(height: spacingLarge),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: ScreenUtil.isLargeScreen() ? 3 : 2,
-                childAspectRatio: 1.3,
-                crossAxisSpacing: spacing,
-                mainAxisSpacing: spacing,
-              ),
-              itemCount: services.length,
-              itemBuilder: (context, index) {
-                final service = services[index];
-                return _buildServiceCard(
-                  title: service['title'],
-                  icon: service['icon'],
-                  description: service['description'],
-                  isGrid: true,
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildServiceCard({
-    required String title,
-    required IconData icon,
-    required String description,
-    bool isGrid = false,
-  }) {
-    final double borderRadius = AppDimensions.getAdaptiveRadius(
-      AppDimensions.radius12,
-    );
-    final double padding = AppDimensions.getAdaptivePadding(
-      AppDimensions.padding16,
-    );
-    final double spacing = AppDimensions.getAdaptivePadding(
-      AppDimensions.spacingMedium,
-    );
-    final double iconSize = AppDimensions.getAdaptiveIconSize(30);
-
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(borderRadius),
-      ),
-      elevation: 2,
-      child: InkWell(
-        onTap: () {
-          // Navigate to service
-        },
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: Padding(
-          padding: EdgeInsets.all(padding),
-          child:
-              isGrid
-                  // Вид для сетки (планшет/десктоп)
-                  ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(padding * 0.7),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          icon,
-                          color: AppColors.primary,
-                          size: iconSize,
-                        ),
-                      ),
-                      SizedBox(height: padding * 0.5),
-                      AdaptiveText(
-                        title,
-                        style: AppTextStyles.h3,
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: padding * 0.3),
-                      AdaptiveText(
-                        description,
-                        style: AppTextStyles.body2.copyWith(color: Colors.grey),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  )
-                  // Вид для списка (мобильный)
-                  : Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(padding * 0.7),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          icon,
-                          color: AppColors.primary,
-                          size: iconSize,
-                        ),
-                      ),
-                      SizedBox(width: spacing),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            AdaptiveText(title, style: AppTextStyles.h3),
-                            SizedBox(height: 4),
-                            AdaptiveText(
-                              description,
-                              style: AppTextStyles.body2.copyWith(
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(Icons.arrow_forward_ios, size: 16),
-                    ],
-                  ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildProfileTab() {
     final double padding = AppDimensions.getAdaptivePadding(
       AppDimensions.padding16,
@@ -1927,8 +1559,21 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                       SizedBox(height: spacing),
                       OutlinedButton(
-                        onPressed: () {
-                          // Logout
+                        onPressed: () async {
+                          // Получаем контроллер авторизации
+                          final authController = Provider.of<AuthController>(
+                            context,
+                            listen: false,
+                          );
+
+                          // Выполняем выход
+                          await authController.logout();
+
+                          // Переходим на страницу входа
+                          if (!mounted) return;
+                          Navigator.of(
+                            context,
+                          ).pushNamedAndRemoveUntil('/login', (route) => false);
                         },
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size.fromHeight(50),
@@ -1968,10 +1613,32 @@ class _DashboardPageState extends State<DashboardPage> {
     );
 
     final List<Map<String, dynamic>> menuItems = [
-      {'title': 'Личные данные', 'icon': Icons.person_outline},
-      {'title': 'Мои документы', 'icon': Icons.folder_outlined},
-      {'title': 'История оплат', 'icon': Icons.receipt_long_outlined},
-      {'title': 'Помощь', 'icon': Icons.help_outline},
+      {
+        'title': 'Личные данные',
+        'icon': Icons.person_outline,
+        'onTap': () => Navigator.of(context).pushNamed('/profile'),
+      },
+      {
+        'title': 'Мои документы',
+        'icon': Icons.folder_outlined,
+        'onTap': () {
+          // Будет добавлено позже
+        },
+      },
+      {
+        'title': 'История оплат',
+        'icon': Icons.receipt_long_outlined,
+        'onTap': () {
+          // Будет добавлено позже
+        },
+      },
+      {
+        'title': 'Помощь',
+        'icon': Icons.help_outline,
+        'onTap': () {
+          // Будет добавлено позже
+        },
+      },
     ];
 
     return Card(
@@ -1989,9 +1656,7 @@ class _DashboardPageState extends State<DashboardPage> {
               (item) => _buildMenuTile(
                 title: item['title'],
                 icon: item['icon'],
-                onTap: () {
-                  // Navigate to menu item
-                },
+                onTap: item['onTap'],
               ),
             ),
           ],
@@ -2009,10 +1674,34 @@ class _DashboardPageState extends State<DashboardPage> {
     );
 
     final List<Map<String, dynamic>> settingsItems = [
-      {'title': 'Уведомления', 'icon': Icons.notifications_outlined},
-      {'title': 'Язык приложения', 'icon': Icons.language_outlined},
-      {'title': 'Смена пароля', 'icon': Icons.lock_outline},
-      {'title': 'Конфиденциальность', 'icon': Icons.security_outlined},
+      {
+        'title': 'Уведомления',
+        'icon': Icons.notifications_outlined,
+        'onTap': () {
+          // Будет добавлено позже
+        },
+      },
+      {
+        'title': 'Язык приложения',
+        'icon': Icons.language_outlined,
+        'onTap': () {
+          // Будет добавлено позже
+        },
+      },
+      {
+        'title': 'Смена пароля',
+        'icon': Icons.lock_outline,
+        'onTap': () {
+          // Будет добавлено позже
+        },
+      },
+      {
+        'title': 'Конфиденциальность',
+        'icon': Icons.security_outlined,
+        'onTap': () {
+          // Будет добавлено позже
+        },
+      },
     ];
 
     return Card(
@@ -2030,9 +1719,7 @@ class _DashboardPageState extends State<DashboardPage> {
               (item) => _buildMenuTile(
                 title: item['title'],
                 icon: item['icon'],
-                onTap: () {
-                  // Navigate to settings item
-                },
+                onTap: item['onTap'],
               ),
             ),
           ],
@@ -2078,8 +1765,21 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildLogoutButton() {
     return ElevatedButton(
-      onPressed: () {
-        context.go('/login');
+      onPressed: () async {
+        // Получаем контроллер авторизации
+        final authController = Provider.of<AuthController>(
+          context,
+          listen: false,
+        );
+
+        // Выполняем выход
+        await authController.logout();
+
+        // Переходим на страницу входа
+        if (!mounted) return;
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('/login', (route) => false);
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.grey.shade200,

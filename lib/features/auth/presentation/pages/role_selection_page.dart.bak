@@ -34,13 +34,13 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
 
     switch (selectedRole) {
       case 'parent':
-        Navigator.of(context).pushNamed('/register/parent');
+        context.go('/register/parent');
         break;
       case 'teacher':
-        Navigator.of(context).pushNamed('/register/teacher/step1');
+        context.go('/register/teacher/step1');
         break;
       case 'manager':
-        Navigator.of(context).pushNamed('/register/manager/step1');
+        context.go('/register/manager/step1');
         break;
     }
   }
@@ -70,9 +70,7 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                 top: 20,
                 left: 20,
                 child: GestureDetector(
-                  onTap:
-                      () =>
-                          Navigator.of(context).pushReplacementNamed('/login'),
+                  onTap: () => context.go('/login'),
                   child: Container(
                     width: 40,
                     height: 40,
@@ -191,24 +189,24 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                           ),
 
                           // Кнопка "Далее"
-                          GestureDetector(
-                            onTap: _handleNext,
-                            child: Container(
-                              width: double.infinity,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: AppColors.figmaGreen,
-                                borderRadius: BorderRadius.circular(10),
+                          Container(
+                            width: double.infinity,
+                            height: 65,
+                            child: ElevatedButton(
+                              onPressed: _handleNext,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.figmaGreen,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                elevation: 0,
                               ),
-                              child: Center(
-                                child: Text(
-                                  'Далее',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  textAlign: TextAlign.center,
+                              child: const Text(
+                                'Далее',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
@@ -267,23 +265,23 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                           const SizedBox(height: 50),
 
                           Container(
-                            width: double.infinity,
-                            height: 65,
+                            width: 320,
+                            height: 46,
                             child: ElevatedButton(
                               onPressed: _handleNext,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.figmaGreen,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(9),
                                 ),
                                 elevation: 0,
                               ),
                               child: const Text(
                                 'Далее',
                                 style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w500,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w400,
                                 ),
                               ),
                             ),
@@ -309,26 +307,26 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
       child: Container(
         width: double.infinity,
         height: ScreenUtil.adaptiveValue(
-          mobile: 45.0,
+          mobile: 45.0, // Увеличенная высота кнопки
           tablet: 55.0,
           desktop: 65.0,
         ),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.figmaGreen : Colors.transparent,
           border: Border.all(color: AppColors.figmaGreen, width: 1),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(10), // Более округлый радиус
         ),
         child: Center(
           child: Text(
             label,
             style: TextStyle(
               fontSize: ScreenUtil.adaptiveValue(
-                mobile: 16.0,
+                mobile: 16.0, // Увеличенный размер шрифта
                 tablet: 18.0,
                 desktop: 20.0,
               ),
               color: isSelected ? Colors.white : AppColors.figmaGreen,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w500, // Более заметный шрифт
             ),
             textAlign: TextAlign.center,
           ),

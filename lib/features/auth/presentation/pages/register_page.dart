@@ -128,7 +128,7 @@ class _RegisterPageState extends State<RegisterPage> {
       );
 
       // Navigate to dashboard
-      context.go('/dashboard');
+      Navigator.of(context).pushReplacementNamed('/dashboard');
     });
   }
 
@@ -156,7 +156,7 @@ class _RegisterPageState extends State<RegisterPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            context.go('/login');
+            Navigator.of(context).pushReplacementNamed('/login');
           },
         ),
       ),
@@ -387,9 +387,10 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                           ),
                           TextButton(
-                            onPressed: () {
-                              context.go('/login');
-                            },
+                            onPressed:
+                                () => Navigator.of(
+                                  context,
+                                ).pushReplacementNamed('/login'),
                             child: AdaptiveText(
                               'Войти',
                               style: TextStyle(
@@ -708,9 +709,10 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
 
                               TextButton(
-                                onPressed: () {
-                                  context.go('/login');
-                                },
+                                onPressed:
+                                    () => Navigator.of(
+                                      context,
+                                    ).pushReplacementNamed('/login'),
                                 child: AdaptiveText(
                                   'Уже есть аккаунт? Войти',
                                   style: AppTextStyles.body1.copyWith(
@@ -958,9 +960,7 @@ class _RegisterPageState extends State<RegisterPage> {
           height: AppDimensions.getAdaptivePadding(AppDimensions.spacingMedium),
         ),
         TextButton(
-          onPressed: () {
-            context.go('/login');
-          },
+          onPressed: () => Navigator.of(context).pushReplacementNamed('/login'),
           style: TextButton.styleFrom(
             padding: EdgeInsets.symmetric(
               horizontal: AppDimensions.getAdaptivePadding(

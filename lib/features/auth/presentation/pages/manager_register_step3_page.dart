@@ -288,16 +288,16 @@ class _ManagerRegisterStep3PageState extends State<ManagerRegisterStep3Page> {
 
                           // Кнопка "Вернуться назад"
                           GestureDetector(
-                            onTap: () => context.go('/register/manager/step2'),
-                            child: Text(
+                            onTap:
+                                () =>
+                                    Navigator.of(context).pushReplacementNamed(
+                                      '/register/manager/step2',
+                                    ),
+                            child: const Text(
                               'Вернуться назад',
                               style: TextStyle(
-                                fontSize: ScreenUtil.adaptiveValue(
-                                  mobile: 10.0,
-                                  tablet: 12.0,
-                                  desktop: 14.0,
-                                ),
-                                color: AppColors.figmaTextSecondary,
+                                fontSize: 12,
+                                color: Color(0x8084898D),
                                 fontStyle: FontStyle.italic,
                               ),
                               textAlign: TextAlign.center,
@@ -401,12 +401,15 @@ class _ManagerRegisterStep3PageState extends State<ManagerRegisterStep3Page> {
                       const SizedBox(height: 20),
 
                       GestureDetector(
-                        onTap: () => context.go('/register/manager/step2'),
+                        onTap:
+                            () => Navigator.of(
+                              context,
+                            ).pushReplacementNamed('/register/manager/step2'),
                         child: const Text(
                           'Вернуться назад',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF84898D),
+                            color: Color(0x8084898D),
                             fontStyle: FontStyle.italic,
                           ),
                           textAlign: TextAlign.center,

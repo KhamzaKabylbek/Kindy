@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:kindy/core/constants/app_colors.dart';
 import 'package:kindy/core/constants/app_dimensions.dart';
 import 'package:kindy/core/constants/app_text_styles.dart';
 import 'package:kindy/core/utils/screen_util.dart';
+import 'package:kindy/features/auth/domain/controllers/auth_controller.dart';
+import 'package:kindy/features/auth/domain/entities/auth_entities.dart';
 import 'package:kindy/shared/widgets/adaptive_form.dart' as form;
 import 'package:kindy/shared/widgets/adaptive_widgets.dart';
 import 'package:kindy/shared/widgets/kindergarten_illustration.dart';
@@ -28,7 +31,7 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -44,14 +47,47 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
       _isLoading = true;
     });
 
-    // Simulate login process
-    Future.delayed(const Duration(seconds: 2), () {
+    try {
+      final authController = Provider.of<AuthController>(
+        context,
+        listen: false,
+      );
+      final success = await authController.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
       if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
-      context.go('/dashboard');
-    });
+
+      if (success) {
+        print('Вход выполнен успешно!');
+
+        // Переход на дашборд
+        context.go('/dashboard');
+      } else {
+        final errorMessage = authController.errorMessage ?? 'Ошибка входа';
+        _showErrorSnackBar(errorMessage);
+      }
+    } catch (e) {
+      print('Ошибка при входе: $e');
+      _showErrorSnackBar('Произошла ошибка при входе');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.warning,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _handleDigitalSignatureLogin() {
@@ -66,7 +102,7 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
   }
 
   void _handleRegister() {
-    context.go('/register');
+    Navigator.of(context).pushNamed('/register');
   }
 
   @override
@@ -95,7 +131,7 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
                 Center(
                   child: Container(
                     width: 340,
-                    height: 520,
+                    height: 580,
                     margin: const EdgeInsets.symmetric(horizontal: 24),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -128,7 +164,7 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
                               borderRadius: BorderRadius.circular(18),
                             ),
                             child: Text(
-                              'Kindy.kz',
+                              'Kindy',
                               style: TextStyle(
                                 fontFamily: 'Comic Sans MS',
                                 fontSize: 18,
@@ -159,7 +195,10 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: GestureDetector(
-                              onTap: () => context.go('/forgot-password'),
+                              onTap:
+                                  () => Navigator.of(
+                                    context,
+                                  ).pushNamed('/forgot-password'),
                               child: Text(
                                 'Забыли пароль?',
                                 style: TextStyle(
@@ -462,7 +501,7 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Kindy.kz',
+                    'Kindy',
                     style: TextStyle(
                       fontFamily: 'Comic Sans MS',
                       fontSize: 36,
@@ -563,7 +602,7 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
         Align(
           alignment: Alignment.centerRight,
           child: GestureDetector(
-            onTap: () => context.go('/forgot-password'),
+            onTap: () => Navigator.of(context).pushNamed('/forgot-password'),
             child: Text(
               'Забыли пароль?',
               style: TextStyle(
@@ -606,7 +645,7 @@ class _KindergartenLoginPageState extends State<KindergartenLoginPage> {
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         GestureDetector(
           onTap: _handleDigitalSignatureLogin,
           child: Container(

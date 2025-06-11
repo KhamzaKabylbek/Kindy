@@ -22,6 +22,7 @@ class _ManagerRegisterStep2PageState extends State<ManagerRegisterStep2Page> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
@@ -34,47 +35,27 @@ class _ManagerRegisterStep2PageState extends State<ManagerRegisterStep2Page> {
   }
 
   void _handleNext() {
-    // Валидация полей
-    if (_binController.text.trim().isEmpty) {
-      _showErrorSnackBar('Пожалуйста, введите БИН организации');
-      return;
+    if (_formKey.currentState!.validate()) {
+      // Если валидация прошла успешно, создаем данные для передачи на следующий шаг
+      final data = {
+        'name': widget.previousData?['name'],
+        'surname': widget.previousData?['surname'],
+        'iin': widget.previousData?['iin'],
+        'email': widget.previousData?['email'],
+        'kindergartenName': _organizationNameController.text,
+        'address': widget.previousData?['address'],
+        'phone': widget.previousData?['phone'],
+        'bin': _binController.text.trim(),
+        'organizationName': _organizationNameController.text.trim(),
+        'organizationEmail': _organizationEmailController.text.trim(),
+        'password': _passwordController.text.trim(),
+      };
+
+      // Переходим на третий шаг регистрации руководителя с передачей данных
+      Navigator.of(
+        context,
+      ).pushNamed('/register/manager/step3', arguments: data);
     }
-
-    if (_organizationNameController.text.trim().isEmpty) {
-      _showErrorSnackBar('Пожалуйста, введите наименование организации');
-      return;
-    }
-
-    if (_organizationEmailController.text.trim().isEmpty) {
-      _showErrorSnackBar('Пожалуйста, введите почту организации');
-      return;
-    }
-
-    if (_passwordController.text.trim().isEmpty) {
-      _showErrorSnackBar('Пожалуйста, введите пароль');
-      return;
-    }
-
-    if (_confirmPasswordController.text.trim().isEmpty) {
-      _showErrorSnackBar('Пожалуйста, повторите пароль');
-      return;
-    }
-
-    if (_passwordController.text != _confirmPasswordController.text) {
-      _showErrorSnackBar('Пароли не совпадают');
-      return;
-    }
-
-    // Объединяем данные с предыдущего шага
-    final data = {
-      ...widget.previousData ?? {},
-      'bin': _binController.text.trim(),
-      'organizationName': _organizationNameController.text.trim(),
-      'organizationEmail': _organizationEmailController.text.trim(),
-      'password': _passwordController.text.trim(),
-    };
-
-    context.go('/register/manager/step3', extra: data);
   }
 
   void _showErrorSnackBar(String message) {
@@ -286,16 +267,16 @@ class _ManagerRegisterStep2PageState extends State<ManagerRegisterStep2Page> {
 
                           // Кнопка "Вернуться назад"
                           GestureDetector(
-                            onTap: () => context.go('/register/manager/step1'),
-                            child: Text(
+                            onTap:
+                                () =>
+                                    Navigator.of(context).pushReplacementNamed(
+                                      '/register/manager/step1',
+                                    ),
+                            child: const Text(
                               'Вернуться назад',
                               style: TextStyle(
-                                fontSize: ScreenUtil.adaptiveValue(
-                                  mobile: 10.0,
-                                  tablet: 12.0,
-                                  desktop: 14.0,
-                                ),
-                                color: AppColors.figmaTextSecondary,
+                                fontSize: 12,
+                                color: Color(0x8084898D),
                                 fontStyle: FontStyle.italic,
                               ),
                               textAlign: TextAlign.center,
@@ -411,12 +392,15 @@ class _ManagerRegisterStep2PageState extends State<ManagerRegisterStep2Page> {
                       const SizedBox(height: 20),
 
                       GestureDetector(
-                        onTap: () => context.go('/register/manager/step1'),
+                        onTap:
+                            () => Navigator.of(
+                              context,
+                            ).pushReplacementNamed('/register/manager/step1'),
                         child: const Text(
                           'Вернуться назад',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF84898D),
+                            color: Color(0x8084898D),
                             fontStyle: FontStyle.italic,
                           ),
                           textAlign: TextAlign.center,

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:kindy/core/constants/app_colors.dart';
 import 'package:kindy/core/utils/screen_util.dart';
+import 'package:kindy/features/auth/domain/controllers/auth_controller.dart';
 import 'package:kindy/shared/widgets/adaptive_widgets.dart';
 
 class ParentRegisterPage extends StatefulWidget {
@@ -31,7 +33,7 @@ class _ParentRegisterPageState extends State<ParentRegisterPage> {
     super.dispose();
   }
 
-  void _handleRegister() {
+  void _handleRegister() async {
     // Валидация полей
     if (_lastNameController.text.trim().isEmpty) {
       _showErrorSnackBar('Пожалуйста, введите фамилию');
@@ -72,23 +74,44 @@ class _ParentRegisterPageState extends State<ParentRegisterPage> {
       _isLoading = true;
     });
 
-    // Simulate registration
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+    try {
+      final authController = Provider.of<AuthController>(
+        context,
+        listen: false,
+      );
+      final success = await authController.registerParent(
+        lastName: _lastNameController.text.trim(),
+        firstName: _firstNameController.text.trim(),
+        iin: _iinController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        confirmPassword: _confirmPasswordController.text,
+      );
 
+      if (!mounted) return;
+
+      if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Регистрация прошла успешно!'),
             backgroundColor: AppColors.success,
           ),
         );
-
         context.go('/login');
+      } else {
+        final errorMessage =
+            authController.errorMessage ?? 'Ошибка регистрации';
+        _showErrorSnackBar(errorMessage);
       }
-    });
+    } catch (e) {
+      _showErrorSnackBar('Произошла ошибка при регистрации');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   void _showErrorSnackBar(String message) {
@@ -296,18 +319,15 @@ class _ParentRegisterPageState extends State<ParentRegisterPage> {
 
                           // Кнопка "Вернуться назад"
                           GestureDetector(
-                            onTap: () => context.go('/register'),
-                            child: Text(
+                            onTap:
+                                () => Navigator.of(
+                                  context,
+                                ).pushReplacementNamed('/register'),
+                            child: const Text(
                               'Вернуться назад',
                               style: TextStyle(
-                                fontSize: ScreenUtil.adaptiveValue(
-                                  mobile: 10.0,
-                                  tablet: 12.0,
-                                  desktop: 14.0,
-                                ),
-                                color: AppColors.figmaTextSecondary.withOpacity(
-                                  0.5,
-                                ),
+                                fontSize: 12,
+                                color: Color(0x8084898D),
                                 fontStyle: FontStyle.italic,
                               ),
                               textAlign: TextAlign.center,
@@ -419,7 +439,10 @@ class _ParentRegisterPageState extends State<ParentRegisterPage> {
                       const SizedBox(height: 20),
 
                       GestureDetector(
-                        onTap: () => context.go('/register'),
+                        onTap:
+                            () => Navigator.of(
+                              context,
+                            ).pushReplacementNamed('/register'),
                         child: const Text(
                           'Вернуться назад',
                           style: TextStyle(

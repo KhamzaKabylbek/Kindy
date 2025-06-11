@@ -17,6 +17,7 @@ class _ManagerRegisterStep1PageState extends State<ManagerRegisterStep1Page> {
   final _firstNameController = TextEditingController();
   final _iinController = TextEditingController();
   final _emailController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
@@ -28,36 +29,20 @@ class _ManagerRegisterStep1PageState extends State<ManagerRegisterStep1Page> {
   }
 
   void _handleNext() {
-    // Валидация полей
-    if (_lastNameController.text.trim().isEmpty) {
-      _showErrorSnackBar('Пожалуйста, введите фамилию');
-      return;
+    if (_formKey.currentState!.validate()) {
+      // Если валидация прошла успешно, создаем данные для передачи на следующий шаг
+      final data = {
+        'name': _lastNameController.text + ' ' + _firstNameController.text,
+        'surname': _lastNameController.text,
+        'iin': _iinController.text,
+        'email': _emailController.text,
+      };
+
+      // Переходим на второй шаг регистрации руководителя с передачей данных
+      Navigator.of(
+        context,
+      ).pushNamed('/register/manager/step2', arguments: data);
     }
-
-    if (_firstNameController.text.trim().isEmpty) {
-      _showErrorSnackBar('Пожалуйста, введите имя');
-      return;
-    }
-
-    if (_iinController.text.trim().isEmpty) {
-      _showErrorSnackBar('Пожалуйста, введите ИИН');
-      return;
-    }
-
-    if (_emailController.text.trim().isEmpty) {
-      _showErrorSnackBar('Пожалуйста, введите почту');
-      return;
-    }
-
-    // Переход на следующий шаг с данными
-    final data = {
-      'lastName': _lastNameController.text.trim(),
-      'firstName': _firstNameController.text.trim(),
-      'iin': _iinController.text.trim(),
-      'email': _emailController.text.trim(),
-    };
-
-    context.go('/register/manager/step2', extra: data);
   }
 
   void _showErrorSnackBar(String message) {
@@ -243,16 +228,15 @@ class _ManagerRegisterStep1PageState extends State<ManagerRegisterStep1Page> {
 
                           // Кнопка "Вернуться назад"
                           GestureDetector(
-                            onTap: () => context.go('/register'),
-                            child: Text(
+                            onTap:
+                                () => Navigator.of(
+                                  context,
+                                ).pushReplacementNamed('/register'),
+                            child: const Text(
                               'Вернуться назад',
                               style: TextStyle(
-                                fontSize: ScreenUtil.adaptiveValue(
-                                  mobile: 10.0,
-                                  tablet: 12.0,
-                                  desktop: 14.0,
-                                ),
-                                color: AppColors.figmaTextSecondary,
+                                fontSize: 12,
+                                color: Color(0x8084898D),
                                 fontStyle: FontStyle.italic,
                               ),
                               textAlign: TextAlign.center,
@@ -342,12 +326,15 @@ class _ManagerRegisterStep1PageState extends State<ManagerRegisterStep1Page> {
                       const SizedBox(height: 20),
 
                       GestureDetector(
-                        onTap: () => context.go('/register'),
+                        onTap:
+                            () => Navigator.of(
+                              context,
+                            ).pushReplacementNamed('/register'),
                         child: const Text(
                           'Вернуться назад',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF84898D),
+                            color: Color(0x8084898D),
                             fontStyle: FontStyle.italic,
                           ),
                           textAlign: TextAlign.center,

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:kindy/core/constants/app_colors.dart';
 import 'package:kindy/core/constants/app_dimensions.dart';
 import 'package:kindy/core/constants/app_text_styles.dart';
 import 'package:kindy/core/utils/screen_util.dart';
+import 'package:kindy/features/auth/domain/controllers/auth_controller.dart';
 import 'package:kindy/shared/widgets/adaptive_form.dart' as form;
 import 'package:kindy/shared/widgets/adaptive_widgets.dart';
 
@@ -25,6 +27,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   int _currentStep = 0;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authController = Provider.of<AuthController>(
+        context,
+        listen: false,
+      );
+      authController.clearResetState();
+    });
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _codeController.dispose();
@@ -33,14 +47,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     super.dispose();
   }
 
-  void _handleRequestCode() {
+  void _handleRequestCode() async {
     if (_emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Пожалуйста, введите email'),
-          backgroundColor: AppColors.warning,
-        ),
-      );
+      _showErrorSnackBar('Пожалуйста, введите email');
       return;
     }
 
@@ -48,30 +57,45 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       _isLoading = true;
     });
 
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _currentStep = 1;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Код подтверждения отправлен на вашу почту'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
+    final authController = Provider.of<AuthController>(context, listen: false);
+    final success = await authController.requestResetCode(
+      email: _emailController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
     });
+
+    if (success) {
+      setState(() {
+        _currentStep = 1;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Код подтверждения отправлен на вашу почту'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } else {
+      _showErrorSnackBar(
+        authController.errorMessage ?? 'Ошибка при отправке кода',
+      );
+    }
   }
 
-  void _handleVerifyCode() {
+  void _handleVerifyCode() async {
     if (_codeController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Пожалуйста, введите код подтверждения'),
-          backgroundColor: AppColors.warning,
-        ),
-      );
+      _showErrorSnackBar('Пожалуйста, введите код подтверждения');
+      return;
+    }
+
+    int? code;
+    try {
+      code = int.parse(_codeController.text.trim());
+    } catch (e) {
+      _showErrorSnackBar('Введите корректный код');
       return;
     }
 
@@ -79,35 +103,35 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       _isLoading = true;
     });
 
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _currentStep = 2;
-        });
-      }
+    final authController = Provider.of<AuthController>(context, listen: false);
+    final success = await authController.verifyResetCode(code: code);
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
     });
+
+    if (success) {
+      setState(() {
+        _currentStep = 2;
+      });
+    } else {
+      _showErrorSnackBar(
+        authController.errorMessage ?? 'Неверный код подтверждения',
+      );
+    }
   }
 
-  void _handleResetPassword() {
+  void _handleResetPassword() async {
     if (_newPasswordController.text.isEmpty ||
         _confirmPasswordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Пожалуйста, заполните все поля'),
-          backgroundColor: AppColors.warning,
-        ),
-      );
+      _showErrorSnackBar('Пожалуйста, заполните все поля');
       return;
     }
 
     if (_newPasswordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Пароли не совпадают'),
-          backgroundColor: AppColors.warning,
-        ),
-      );
+      _showErrorSnackBar('Пароли не совпадают');
       return;
     }
 
@@ -115,66 +139,83 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       _isLoading = true;
     });
 
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+    final authController = Provider.of<AuthController>(context, listen: false);
+    final success = await authController.resetPassword(
+      newPassword: _newPasswordController.text,
+      confirmPassword: _confirmPasswordController.text,
+    );
 
-        showDialog(
-          context: context,
-          builder:
-              (BuildContext context) => AlertDialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.check_circle,
-                      color: AppColors.success,
-                      size: 64,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Пароль успешно изменен!',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Теперь вы можете войти, используя новый пароль',
-                      style: TextStyle(fontSize: 14),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          context.go('/login');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.figmaGreen,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(9),
-                          ),
-                        ),
-                        child: const Text('Вернуться к входу'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-        );
-      }
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
     });
+
+    if (success) {
+      _showSuccessDialog();
+    } else {
+      _showErrorSnackBar(
+        authController.errorMessage ?? 'Ошибка при изменении пароля',
+      );
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: AppColors.warning),
+    );
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder:
+          (BuildContext context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.check_circle,
+                  color: AppColors.success,
+                  size: 64,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Пароль успешно изменен!',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Теперь вы можете войти, используя новый пароль',
+                  style: TextStyle(fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      context.go('/login');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.figmaGreen,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(9),
+                      ),
+                    ),
+                    child: const Text('Вернуться к входу'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
   }
 
   @override

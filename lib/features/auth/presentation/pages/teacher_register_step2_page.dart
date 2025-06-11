@@ -75,7 +75,7 @@ class _TeacherRegisterStep2PageState extends State<TeacherRegisterStep2Page> {
           ),
         );
 
-        context.go('/login');
+        Navigator.of(context).pushReplacementNamed('/login');
       }
     });
   }
@@ -284,16 +284,16 @@ class _TeacherRegisterStep2PageState extends State<TeacherRegisterStep2Page> {
 
                           // Кнопка "Вернуться назад"
                           GestureDetector(
-                            onTap: () => context.go('/register/teacher/step1'),
-                            child: Text(
+                            onTap:
+                                () =>
+                                    Navigator.of(context).pushReplacementNamed(
+                                      '/register/teacher/step1',
+                                    ),
+                            child: const Text(
                               'Вернуться назад',
                               style: TextStyle(
-                                fontSize: ScreenUtil.adaptiveValue(
-                                  mobile: 10.0,
-                                  tablet: 12.0,
-                                  desktop: 14.0,
-                                ),
-                                color: AppColors.figmaTextSecondary,
+                                fontSize: 12,
+                                color: Color(0x8084898D),
                                 fontStyle: FontStyle.italic,
                               ),
                               textAlign: TextAlign.center,
@@ -407,12 +407,15 @@ class _TeacherRegisterStep2PageState extends State<TeacherRegisterStep2Page> {
                       const SizedBox(height: 20),
 
                       GestureDetector(
-                        onTap: () => context.go('/register/teacher/step1'),
+                        onTap:
+                            () => Navigator.of(
+                              context,
+                            ).pushReplacementNamed('/register/teacher/step1'),
                         child: const Text(
                           'Вернуться назад',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF84898D),
+                            color: Color(0x8084898D),
                             fontStyle: FontStyle.italic,
                           ),
                           textAlign: TextAlign.center,
