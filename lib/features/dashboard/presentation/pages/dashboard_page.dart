@@ -7,6 +7,7 @@ import 'package:kindy/core/utils/screen_util.dart';
 import 'package:kindy/shared/widgets/adaptive_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:kindy/features/auth/domain/controllers/auth_controller.dart';
+import 'package:kindy/shared/widgets/social_actions.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -102,9 +103,9 @@ class _DashboardPageState extends State<DashboardPage> {
             selectedLabelTextStyle: TextStyle(color: AppColors.primary),
             destinations: const [
               NavigationRailDestination(
-                icon: Icon(Icons.home_outlined),
+                icon: Icon(Icons.newspaper_outlined),
                 selectedIcon: Icon(Icons.home),
-                label: Text('Главная'),
+                label: Text('Новости'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.child_care_outlined),
@@ -198,9 +199,9 @@ class _DashboardPageState extends State<DashboardPage> {
       unselectedFontSize: labelFontSize - 2,
       items: const [
         BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
-          label: 'Главная',
+          icon: Icon(Icons.newspaper_sharp),
+          activeIcon: Icon(Icons.newspaper),
+          label: 'Новости',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.child_care_outlined),
@@ -481,8 +482,9 @@ class _DashboardPageState extends State<DashboardPage> {
             final newsItem = newsItems[index];
             return _buildNewsItem(
               authorName: newsItem['authorName'],
-              avatarUrl: newsItem['avatarUrl'],
-              timestamp: newsItem['timestamp'],
+              authorRole: '',
+              authorAvatarUrl: newsItem['avatarUrl'],
+              timeAgo: newsItem['timestamp'],
               content: newsItem['content'],
               imageUrl: newsItem['imageUrl'],
               likes: newsItem['likes'],
@@ -510,11 +512,12 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // Виджет отдельного элемента новости
+  // Виджет новости
   Widget _buildNewsItem({
     required String authorName,
-    required String avatarUrl,
-    required String timestamp,
+    required String authorRole,
+    required String authorAvatarUrl,
+    required String timeAgo,
     required String content,
     required String imageUrl,
     required int likes,
@@ -527,74 +530,72 @@ class _DashboardPageState extends State<DashboardPage> {
       AppDimensions.padding16,
     );
     final double spacing = AppDimensions.getAdaptivePadding(
-      AppDimensions.spacingMedium,
-    );
-    final double spacingSmall = AppDimensions.getAdaptivePadding(
       AppDimensions.spacingSmall,
     );
 
-    return Card(
-      margin: EdgeInsets.symmetric(horizontal: padding, vertical: spacingSmall),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 1,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Шапка с автором и временем
-          Padding(
-            padding: EdgeInsets.all(padding),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.grey.shade200,
-                  child: Text(
-                    authorName.substring(0, 1),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+    return Container(
+      width:
+          MediaQuery.of(context).size.width * 0.95, // Чуть меньше ширины экрана
+      margin: EdgeInsets.only(bottom: padding, left: padding, right: padding),
+      child: Card(
+        elevation: 1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Шапка новости с автором
+            ListTile(
+              leading: CircleAvatar(
+                backgroundImage:
+                    authorAvatarUrl.isNotEmpty
+                        ? AssetImage(authorAvatarUrl)
+                        : null,
+                backgroundColor: Colors.grey.shade300,
+                child:
+                    authorAvatarUrl.isEmpty
+                        ? Text(
+                          authorName.isNotEmpty
+                              ? authorName.substring(0, 1)
+                              : '?',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        )
+                        : null,
+              ),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      authorName,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
-                SizedBox(width: spacing),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        authorName,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        timestamp,
-                        style: TextStyle(color: Colors.grey, fontSize: 14),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                ],
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (authorRole.isNotEmpty) Text(authorRole),
+                  Text(
+                    timeAgo,
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.more_vert),
-                  onPressed: () {
-                    // Показать дополнительные опции
-                  },
-                  padding: EdgeInsets.zero,
-                  constraints: BoxConstraints(),
-                ),
-              ],
+                ],
+              ),
+              trailing:
+                  null, // Убираем trailing, т.к. переместили дату в subtitle
             ),
-          ),
 
-          // Содержимое новости
-          if (content.isNotEmpty)
+            // Текст новости
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: padding),
+              padding: EdgeInsets.symmetric(
+                horizontal: padding,
+                vertical: padding / 2,
+              ),
               child: Text(
                 content,
                 style: TextStyle(fontSize: 16),
@@ -603,110 +604,64 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ),
 
-          // Кнопка "Посмотреть больше" для длинного текста
-          if (content.length > 100)
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: padding),
-              child: TextButton(
-                onPressed: () {
-                  // Показать полный текст
-                },
-                child: Text('Показать больше...'),
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  alignment: Alignment.centerLeft,
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-            ),
-
-          // Изображение
-          if (imageUrl.isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                margin: EdgeInsets.all(padding),
-                constraints: BoxConstraints(
-                  maxHeight: 200, // Ограничиваем высоту изображения
-                ),
-                width: double.infinity,
-                child: Image.asset(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 200,
-                      color: Colors.grey.shade200,
-                      child: Center(
-                        child: Icon(
-                          Icons.image_not_supported,
-                          color: Colors.grey.shade400,
-                          size: 50,
-                        ),
-                      ),
-                    );
+            // Кнопка "Посмотреть больше" для длинного текста
+            if (content.length > 100)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: padding),
+                child: TextButton(
+                  onPressed: () {
+                    // Показать полный текст
                   },
+                  child: Text('Показать больше...'),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    alignment: Alignment.centerLeft,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
               ),
+
+            // Изображение
+            if (imageUrl.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  margin: EdgeInsets.all(padding),
+                  constraints: BoxConstraints(
+                    maxHeight: 200, // Ограничиваем высоту изображения
+                  ),
+                  width: double.infinity,
+                  child: Image.asset(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 200,
+                        color: Colors.grey.shade200,
+                        child: Center(
+                          child: Icon(
+                            Icons.image_not_supported,
+                            color: Colors.grey.shade400,
+                            size: 50,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+            // Используем новый виджет для лайков и комментариев
+            SocialActionsWidget(
+              likes: likes,
+              comments: comments,
+              hasLiked: hasLiked,
+              onLikePressed: onLikePressed,
+              onCommentPressed: onCommentPressed,
             ),
-
-          // Лайки и комментарии
-          Padding(
-            padding: EdgeInsets.all(padding),
-            child: Row(
-              children: [
-                Text(
-                  '$likes лайков',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                SizedBox(width: spacing),
-                Text(
-                  '$comments комментариев',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-
-          Divider(height: 1),
-
-          // Кнопки действий
-          Row(
-            children: [
-              Expanded(
-                child: TextButton.icon(
-                  onPressed: onLikePressed,
-                  icon: Icon(
-                    hasLiked ? Icons.favorite : Icons.favorite_border,
-                    color: hasLiked ? Colors.red : Colors.grey,
-                  ),
-                  label: Text(
-                    'Нравится',
-                    style: TextStyle(
-                      color: hasLiked ? Colors.red : Colors.grey,
-                    ),
-                  ),
-                  style: TextButton.styleFrom(minimumSize: Size(0, 40)),
-                ),
-              ),
-              Expanded(
-                child: TextButton.icon(
-                  onPressed: onCommentPressed,
-                  icon: const Icon(
-                    Icons.chat_bubble_outline,
-                    color: Colors.grey,
-                  ),
-                  label: const Text(
-                    'Комментировать',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                  style: TextButton.styleFrom(minimumSize: Size(0, 40)),
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

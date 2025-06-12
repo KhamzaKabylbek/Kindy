@@ -7,6 +7,7 @@ import 'package:kindy/core/utils/screen_util.dart';
 import 'package:kindy/shared/widgets/adaptive_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:kindy/features/auth/domain/controllers/auth_controller.dart';
+import 'package:kindy/shared/widgets/social_actions.dart';
 
 class ManagerDashboardPage extends StatefulWidget {
   const ManagerDashboardPage({super.key});
@@ -985,13 +986,13 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
         itemCount: 3,
         itemBuilder: (context, index) {
           return _buildNewsItem(
-            authorName: 'Ясли-сад "Лаяна"',
-            timestamp: 'сегодня в 10:25',
-            content:
-                'Рады сообщить: в нашем садике открывается шахматный кружок для детей старших групп! 🎉\nШахматы помогают развивать внимание, мышление и усидчивость — и всё это в игровой форме.',
-            imageUrl: 'assets/images/Image3.png',
-            likes: 26,
-            comments: 11,
+            title: 'Новость ${index + 1}',
+            content: 'Содержимое новости ${index + 1}',
+            date:
+                '${DateTime.now().day}.${DateTime.now().month}.${DateTime.now().year}',
+            imageUrl: 'assets/images/Image${index + 1}.png',
+            likes: 10 + index,
+            comments: 5 + index,
             hasLiked: false,
           );
         },
@@ -1000,125 +1001,80 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
   }
 
   Widget _buildNewsItem({
-    required String authorName,
-    required String timestamp,
+    required String title,
     required String content,
+    required String date,
     required String imageUrl,
     required int likes,
     required int comments,
     required bool hasLiked,
   }) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Шапка с автором и временем
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.grey.shade200,
-                  child: Text(
-                    authorName.substring(0, 1),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      width:
+          MediaQuery.of(context).size.width * 0.95, // Чуть меньше ширины экрана
+      margin: const EdgeInsets.only(bottom: 16, left: 8, right: 8),
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Заголовок новости и дата
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Text(
-                        authorName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      Text(
-                        timestamp,
-                        style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
                     ],
                   ),
-                ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit, size: 20),
-                      onPressed: () {},
+                  Text(
+                    date,
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  ),
+                  if (content.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(content),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, size: 20),
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Содержимое новости
-          if (content.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(content, style: const TextStyle(fontSize: 16)),
-            ),
-
-          // Изображение
-          if (imageUrl.isNotEmpty)
-            Container(
-              height: 250,
-              width: double.infinity,
-              margin: const EdgeInsets.only(top: 16),
-              decoration: BoxDecoration(color: Colors.grey.shade200),
-              child: Image.asset(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(
-                    child: Icon(
-                      Icons.image,
-                      size: 80,
-                      color: Colors.grey.shade400,
-                    ),
-                  );
-                },
+                ],
               ),
             ),
 
-          // Лайки и комментарии
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Text(
-                  '$likes лайков',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
-                  ),
+            // Изображение, если есть
+            if (imageUrl.isNotEmpty)
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(4),
+                  bottomRight: Radius.circular(4),
                 ),
-                const SizedBox(width: 16),
-                Text(
-                  '$comments комментариев',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
-                  ),
+                child: Image.asset(
+                  imageUrl,
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
                 ),
-              ],
+              ),
+
+            // Используем новый виджет для социальных действий
+            SocialActionsWidget(
+              likes: likes,
+              comments: comments,
+              hasLiked: hasLiked,
+              onLikePressed: () {},
+              onCommentPressed: () {},
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

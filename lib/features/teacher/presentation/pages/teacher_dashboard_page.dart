@@ -7,6 +7,7 @@ import 'package:kindy/core/utils/screen_util.dart';
 import 'package:kindy/shared/widgets/adaptive_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:kindy/features/auth/domain/controllers/auth_controller.dart';
+import 'package:kindy/shared/widgets/social_actions.dart';
 
 class TeacherDashboardPage extends StatefulWidget {
   const TeacherDashboardPage({super.key});
@@ -386,10 +387,11 @@ class _TeacherDashboardPageState extends State<TeacherDashboardPage> {
           const SizedBox(height: 16),
           // Список новостей в стиле Instagram
           _buildNewsItem(
-            authorName: 'Ясли-сад "Лаяна"',
-            timestamp: 'сегодня в 10:25',
+            title:
+                'Рады сообщить: в нашем садике открывается шахматный кружок для детей старших групп! 🎉',
             content:
-                'Рады сообщить: в нашем садике открывается шахматный кружок для детей старших групп! 🎉\nШахматы помогают развивать внимание, мышление и усидчивость — и всё это в игровой форме.',
+                'Шахматы помогают развивать внимание, мышление и усидчивость — и всё это в игровой форме.',
+            date: 'сегодня в 10:25',
             imageUrl: 'assets/images/Image3.png',
             likes: 26,
             comments: 11,
@@ -397,10 +399,10 @@ class _TeacherDashboardPageState extends State<TeacherDashboardPage> {
           ),
           const SizedBox(height: 12),
           _buildNewsItem(
-            authorName: 'Детский сад "Балдаурен"',
-            timestamp: 'вчера в 15:40',
-            content:
+            title:
                 'Сегодня в нашем саду прошел день открытых дверей! Благодарим всех родителей, которые смогли присутствовать и познакомиться с нашими воспитателями и программой обучения.',
+            content: '',
+            date: 'вчера в 15:40',
             imageUrl: '',
             likes: 42,
             comments: 8,
@@ -408,10 +410,10 @@ class _TeacherDashboardPageState extends State<TeacherDashboardPage> {
           ),
           const SizedBox(height: 12),
           _buildNewsItem(
-            authorName: 'Методический отдел',
-            timestamp: '3 дня назад',
-            content:
+            title:
                 'В методическом кабинете обновлены материалы по развитию речи у дошкольников.',
+            content: '',
+            date: '3 дня назад',
             imageUrl: '',
             likes: 38,
             comments: 15,
@@ -423,197 +425,80 @@ class _TeacherDashboardPageState extends State<TeacherDashboardPage> {
   }
 
   Widget _buildNewsItem({
-    required String authorName,
-    required String timestamp,
+    required String title,
     required String content,
+    required String date,
     required String imageUrl,
     required int likes,
     required int comments,
     required bool hasLiked,
   }) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 1,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Шапка с автором и временем
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.grey.shade200,
-                  child: Text(
-                    authorName.substring(0, 1),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        authorName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      Text(
-                        timestamp,
-                        style: TextStyle(color: Colors.grey, fontSize: 14),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.more_vert),
-                  onPressed: () {
-                    // Показать дополнительные опции
-                  },
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ],
-            ),
-          ),
-
-          // Содержимое новости
-          if (content.isNotEmpty)
+    return Container(
+      width:
+          MediaQuery.of(context).size.width * 0.95, // Чуть меньше ширины экрана
+      margin: const EdgeInsets.only(bottom: 16, left: 8, right: 8),
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Заголовок новости и дата
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(content, style: const TextStyle(fontSize: 16)),
-            ),
-
-          // Кнопка "Посмотреть больше" для длинного текста
-          if (content.length > 100)
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
-              child: Text(
-                'Посмотреть больше',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-
-          // Изображение
-          if (imageUrl.isNotEmpty)
-            Container(
-              height: 250,
-              width: double.infinity,
-              decoration: BoxDecoration(color: Colors.grey.shade200),
-              child: Image.asset(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(
-                    child: Icon(
-                      Icons.image,
-                      size: 80,
-                      color: Colors.grey.shade400,
-                    ),
-                  );
-                },
-              ),
-            ),
-
-          // Лайки и комментарии
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                // Кнопка лайка
-                InkWell(
-                  onTap: () {
-                    // Обработка лайка
-                  },
-                  child: Row(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Icon(
-                        hasLiked ? Icons.favorite : Icons.favorite_border,
-                        color: hasLiked ? Colors.red : Colors.grey,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$likes',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade700,
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(width: 16),
-                // Кнопка комментариев
-                InkWell(
-                  onTap: () {
-                    // Показать комментарии
-                  },
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.chat_bubble_outline,
-                        color: Colors.grey,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$comments',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    date,
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
-                ),
-                const SizedBox(width: 10),
-                // Поле для ввода комментария
-                Expanded(
-                  flex: 5,
-                  child: InkWell(
-                    onTap: () {
-                      // Открыть комментарии
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.grey.shade300,
-                          width: 1,
-                        ),
-                      ),
-                      child: const Text(
-                        ' Напишите комментарий',
-                        style: TextStyle(color: Colors.grey, fontSize: 14),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                  if (content.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(content),
                     ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+
+            // Изображение, если есть
+            if (imageUrl.isNotEmpty)
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(4),
+                  bottomRight: Radius.circular(4),
+                ),
+                child: Image.asset(
+                  imageUrl,
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
+                ),
+              ),
+
+            // Заменяем на новый виджет для социальных действий
+            SocialActionsWidget(
+              likes: likes,
+              comments: comments,
+              hasLiked: hasLiked,
+              onLikePressed: () {},
+              onCommentPressed: () {},
+            ),
+          ],
+        ),
       ),
     );
   }
